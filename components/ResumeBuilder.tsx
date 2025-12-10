@@ -192,15 +192,7 @@ const ResumeBuilder: React.FC = () => {
           <div className="flex flex-col md:flex-row items-center gap-10">
             
             {/* Logo Code Gym - Recreated via SVG for fidelity */}
-            <div className="flex-shrink-0">
-               <svg width="150" height="150" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" className="bg-white rounded-full p-2">
-                  <circle cx="250" cy="250" r="230" stroke="black" strokeWidth="15" fill="none"/>
-                  <path d="M120 140 H380 A 100 100 0 0 0 120 140 Z" fill="black"/>
-                  <path d="M120 360 H380 A 100 100 0 0 1 120 360 Z" fill="black"/>
-                  <text x="50%" y="260" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="130" fill="black">CODE</text>
-                  <text x="50%" y="335" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="50" fill="white" letterSpacing="5">GYM</text>
-               </svg>
-            </div>
+            
 
             {/* Copy & Team */}
             <div className="flex-1 text-center md:text-left">
