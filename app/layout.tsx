@@ -44,26 +44,33 @@ export default function RootLayout({
         {/* Print Styles */}
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { 
-              margin: 0; 
+            @page {
+              margin: 0;
               size: auto;
             }
-            body { 
-              margin: 0; 
+            body {
+              margin: 0;
               padding: 0;
               background: white;
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact; 
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body * {
+              visibility: hidden;
+            }
+            #resume-preview, #resume-preview * {
+              visibility: visible;
             }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            
+
             #resume-preview {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
+              visibility: visible;
               position: absolute;
               top: 0;
               left: 0;

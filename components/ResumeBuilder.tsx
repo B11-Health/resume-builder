@@ -109,7 +109,8 @@ const ResumeBuilder: React.FC = () => {
       setShowPreviewMobile(true);
     }
 
-    setTimeout(() => window.print(), 150);
+    // Give the browser a moment to render the preview before invoking print
+    setTimeout(() => window.print(), 300);
   };
 
   return (
