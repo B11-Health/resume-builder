@@ -1,6 +1,9 @@
+'use server';
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { ResumeData } from "../types";
 
+// Initialize API Key securely on the server
 const GEMINI_API_KEY = process.env.API_KEY || '';
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -112,6 +115,6 @@ export const generateResumeFromText = async (text: string): Promise<ResumeData> 
     }
   } catch (error) {
     console.error("Gemini API Error:", error);
-    throw error;
+    throw new Error("Failed to generate resume.");
   }
 };

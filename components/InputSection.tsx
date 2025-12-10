@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
 import { Spinner } from './Spinner';
 import * as mammoth from 'mammoth';
