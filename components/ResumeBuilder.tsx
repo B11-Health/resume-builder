@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { INITIAL_RESUME_DATA, ResumeData } from '../types';
-import { generateResumeFromText } from '../services/geminiService';
 import { InputSection } from './InputSection';
 import { ResumePreview } from './ResumePreview';
 
@@ -56,13 +55,26 @@ const ResumeBuilder: React.FC = () => {
   const handleGenerate = useCallback(async (text: string) => {
     setIsLoading(true);
     try {
-      const newData = await generateResumeFromText(text);
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        const { error: message } = await response.json();
+        throw new Error(message || 'Error generando el currículum.');
+      }
+
+      const newData = await response.json();
       setResumeData(newData);
       if (window.innerWidth < 1024) {
         setShowPreviewMobile(true);
       }
     } catch (error) {
-      alert("Hubo un error generando el currículum. Por favor revisa tu API Key o intenta nuevamente.");
+      alert('Hubo un error generando el currículum. Por favor revisa tu API Key o intenta nuevamente.');
       console.error(error);
     } finally {
       setIsLoading(false);
