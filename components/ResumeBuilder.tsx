@@ -3,7 +3,28 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { INITIAL_RESUME_DATA, ResumeData } from '../types';
 import { InputSection } from './InputSection';
-import { ResumePreview } from './ResumePreview';
+import { ResumePreview, TemplateStyle } from './ResumePreview';
+
+const templates: { id: TemplateStyle; name: string; description: string; badge: string }[] = [
+  {
+    id: 'modern',
+    name: 'Moderno',
+    description: 'Cintillo sólido, acentos en azul y jerarquía clara.',
+    badge: 'Recomendado',
+  },
+  {
+    id: 'minimal',
+    name: 'Minimalista',
+    description: 'Diseño aireado en blanco y negro con tipografía elegante.',
+    badge: 'Ligero',
+  },
+  {
+    id: 'contrast',
+    name: 'Alto contraste',
+    description: 'Gradiente vibrante y sidebar oscuro para destacar.',
+    badge: 'Creativo',
+  },
+];
 
 const TeamList = () => {
   const teamMembers = [
@@ -40,6 +61,7 @@ const ResumeBuilder: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('modern');
 
   useEffect(() => {
     const handleResize = () => {
@@ -82,8 +104,12 @@ const ResumeBuilder: React.FC = () => {
   }, []);
 
   const handlePrint = () => {
-    // Small delay to ensure render is complete if state changed
-    setTimeout(() => window.print(), 100);
+    // Ensure preview is visible on mobile before printing
+    if (isMobile && !showPreviewMobile) {
+      setShowPreviewMobile(true);
+    }
+
+    setTimeout(() => window.print(), 150);
   };
 
   return (
@@ -137,6 +163,35 @@ const ResumeBuilder: React.FC = () => {
         {/* Editor Side (Left) */}
         <div className={`lg:w-[400px] xl:w-[450px] flex-shrink-0 flex flex-col gap-6 ${showPreviewMobile ? 'hidden lg:flex' : 'flex'} no-print`}>
            <InputSection onGenerate={handleGenerate} isLoading={isLoading} />
+
+           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+             <div className="flex items-start justify-between mb-4">
+               <div>
+                 <h2 className="text-2xl font-bold text-slate-800 font-serif mb-1">2. Elige tu estilo</h2>
+                 <p className="text-slate-600 text-sm">Selecciona cómo quieres que se vea tu CV. Puedes cambiarlo cuando quieras.</p>
+               </div>
+               <span className="text-[10px] uppercase tracking-[0.15em] font-bold bg-pr-blue text-white px-3 py-1 rounded-full">Nuevo</span>
+             </div>
+             <div className="grid grid-cols-1 gap-3">
+               {templates.map((template) => (
+                 <button
+                   key={template.id}
+                   onClick={() => setSelectedTemplate(template.id)}
+                   className={`text-left p-4 rounded-lg border transition-all duration-200 flex justify-between items-center gap-3 hover:-translate-y-[2px] ${selectedTemplate === template.id ? 'border-pr-blue bg-blue-50 shadow-md' : 'border-gray-200 bg-slate-50 hover:border-pr-blue/50'}`}
+                 >
+                   <div>
+                     <p className="text-xs uppercase text-slate-500 font-semibold mb-1 flex items-center gap-2">
+                       <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white border text-[10px] font-bold text-slate-600">{template.badge}</span>
+                       Plantilla
+                     </p>
+                     <h3 className="text-lg font-bold text-slate-800">{template.name}</h3>
+                     <p className="text-sm text-slate-600">{template.description}</p>
+                   </div>
+                   <div className={`w-16 h-16 rounded-md border ${selectedTemplate === template.id ? 'border-pr-blue bg-gradient-to-br from-pr-blue/20 to-pr-dark-blue/30' : 'border-slate-200 bg-white'}`}></div>
+                 </button>
+               ))}
+             </div>
+           </div>
            
            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 text-sm text-slate-700 shadow-sm">
               <h3 className="font-bold mb-3 flex items-center gap-2 text-pr-blue">
@@ -181,7 +236,7 @@ const ResumeBuilder: React.FC = () => {
              Para guardar: Clic en Descargar → Destino: <strong>Guardar como PDF</strong>
           </div>
 
-          <ResumePreview data={resumeData} />
+          <ResumePreview data={resumeData} template={selectedTemplate} />
         </div>
 
       </main>

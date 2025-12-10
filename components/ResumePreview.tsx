@@ -3,46 +3,99 @@
 import React from 'react';
 import { ResumeData } from '../types';
 
+export type TemplateStyle = 'modern' | 'minimal' | 'contrast';
+
+const TEMPLATE_STYLES: Record<TemplateStyle, {
+  headerBg: string;
+  headerText: string;
+  accent: string;
+  sidebarBg: string;
+  sidebarBorder: string;
+  bodyFont: string;
+  pillBg: string;
+}> = {
+  modern: {
+    headerBg: 'bg-slate-900 text-white',
+    headerText: 'text-blue-200',
+    accent: 'text-pr-blue',
+    sidebarBg: 'bg-slate-50',
+    sidebarBorder: 'border-slate-200',
+    bodyFont: 'font-sans',
+    pillBg: 'bg-blue-100 text-slate-900',
+  },
+  minimal: {
+    headerBg: 'bg-white text-slate-900 border-b border-slate-200',
+    headerText: 'text-pr-blue',
+    accent: 'text-slate-700',
+    sidebarBg: 'bg-white',
+    sidebarBorder: 'border-slate-100',
+    bodyFont: 'font-serif',
+    pillBg: 'bg-slate-200 text-slate-800',
+  },
+  contrast: {
+    headerBg: 'bg-gradient-to-r from-pr-blue to-pr-dark-blue text-white',
+    headerText: 'text-yellow-100',
+    accent: 'text-yellow-100',
+    sidebarBg: 'bg-slate-900 text-white',
+    sidebarBorder: 'border-slate-700',
+    bodyFont: 'font-sans',
+    pillBg: 'bg-white text-slate-900',
+  },
+};
+
 interface ResumePreviewProps {
   data: ResumeData;
+  template?: TemplateStyle;
 }
 
-export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
+export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = 'modern' }) => {
   const { personalInfo, summary, experience, education, skills, languages } = data;
+  const templateStyles = TEMPLATE_STYLES[template] ?? TEMPLATE_STYLES.modern;
 
   return (
-    <div id="resume-preview" className="bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] mx-auto text-slate-800 font-sans print:shadow-none print:w-full print:max-w-none">
-      
+    <div
+      id="resume-preview"
+      className={`bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] mx-auto text-slate-800 ${templateStyles.bodyFont} print:shadow-none print:w-full print:max-w-none`}
+    >
       {/* Header Section */}
-      <div className="bg-slate-900 text-white p-10 print:bg-slate-900 print:text-white print-color-adjust-exact">
+      <div className={`${templateStyles.headerBg} p-10 print:${templateStyles.headerBg} print-color-adjust-exact`}>
         <h1 className="text-4xl md:text-5xl font-bold font-serif tracking-tight uppercase mb-2">
           {personalInfo.fullName}
         </h1>
-        <p className="text-xl text-blue-200 tracking-wider uppercase font-medium mb-6">{personalInfo.jobTitle}</p>
-        
+        <p className={`text-xl ${templateStyles.headerText} tracking-wider uppercase font-medium mb-6`}>
+          {personalInfo.jobTitle}
+        </p>
+
         <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-blue-50/90 font-light">
           {personalInfo.email && (
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
               {personalInfo.email}
             </div>
           )}
           {personalInfo.phone && (
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
               {personalInfo.phone}
             </div>
           )}
           {personalInfo.location && (
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
               {personalInfo.location}
             </div>
           )}
           {personalInfo.linkedin && (
-             <div className="flex items-center gap-2">
-             <span className="font-bold bg-white text-slate-900 rounded-sm px-1 text-xs">in</span> {personalInfo.linkedin}
-           </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold bg-white text-slate-900 rounded-sm px-1 text-xs">in</span> {personalInfo.linkedin}
+            </div>
           )}
         </div>
       </div>
@@ -50,7 +103,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
       <div className="flex flex-col md:flex-row h-full">
         {/* Main Column */}
         <div className="w-full md:w-2/3 p-8 md:p-10 pr-6">
-          
           {/* Summary */}
           {summary && (
             <section className="mb-8">
@@ -66,8 +118,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
           {experience && experience.length > 0 && (
             <section className="mb-8">
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-6 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
-                 <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
-                 Experiencia Laboral
+                <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
+                Experiencia Laboral
               </h2>
               <div className="space-y-6">
                 {experience.map((exp, index) => (
@@ -76,8 +128,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
                       <h3 className="text-xl font-bold text-slate-800">{exp.role}</h3>
                     </div>
                     <div className="flex justify-between items-center text-sm mb-3">
-                         <span className="text-pr-blue font-bold uppercase tracking-wide">{exp.company}</span>
-                         <span className="text-slate-500 font-medium italic">{exp.startDate} – {exp.endDate}</span>
+                      <span className={`${templateStyles.accent} font-bold uppercase tracking-wide`}>{exp.company}</span>
+                      <span className="text-slate-500 font-medium italic">{exp.startDate} – {exp.endDate}</span>
                     </div>
                     <ul className="list-disc list-outside ml-4 space-y-1.5 text-slate-700 text-sm md:text-base">
                       {exp.description && exp.description.map((point, idx) => (
@@ -92,52 +144,57 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
         </div>
 
         {/* Sidebar Column */}
-        <div className="w-full md:w-1/3 bg-slate-50 p-8 md:p-10 border-l border-slate-200 print:bg-slate-50 print-color-adjust-exact">
-           
-           {/* Skills */}
-           {skills && skills.length > 0 && (
+        <div className={`w-full md:w-1/3 ${templateStyles.sidebarBg} p-8 md:p-10 border-l ${templateStyles.sidebarBorder} print:${templateStyles.sidebarBg} print-color-adjust-exact`}>
+          {/* Skills */}
+          {skills && skills.length > 0 && (
             <section className="mb-8 break-inside-avoid">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-300 pb-1">Habilidades</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+                Habilidades
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <span key={index} className="text-slate-700 text-sm font-medium block w-full mb-1">
-                    • {skill}
+                  <span key={index} className={`text-sm font-medium block w-full mb-1 px-2 py-1 rounded ${templateStyles.pillBg}`}>
+                    {skill}
                   </span>
                 ))}
               </div>
             </section>
-           )}
+          )}
 
-           {/* Education */}
-           {education && education.length > 0 && (
+          {/* Education */}
+          {education && education.length > 0 && (
             <section className="mb-8 break-inside-avoid">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-300 pb-1">Educación</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+                Educación
+              </h2>
               <div className="space-y-5">
                 {education.map((edu, index) => (
                   <div key={index}>
-                    <h3 className="font-bold text-slate-800 leading-tight mb-1">{edu.institution}</h3>
-                    <div className="text-pr-blue text-sm font-medium mb-1">{edu.degree}</div>
+                    <h3 className="font-bold text-slate-800 leading-tight mb-1 dark:text-white">{edu.institution}</h3>
+                    <div className={`${templateStyles.accent} text-sm font-medium mb-1`}>{edu.degree}</div>
                     <div className="text-xs text-slate-500 uppercase">{edu.startDate} – {edu.endDate}</div>
                   </div>
                 ))}
               </div>
             </section>
-           )}
-           
-           {/* Languages */}
-           {languages && languages.length > 0 && (
-             <section className="break-inside-avoid">
-               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-300 pb-1">Idiomas</h2>
-               <ul className="list-none space-y-2">
-                 {languages.map((lang, index) => (
-                   <li key={index} className="text-slate-700 text-sm flex items-center justify-between">
-                      <span>{lang}</span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-pr-blue"></span>
-                   </li>
-                 ))}
-               </ul>
-             </section>
-           )}
+          )}
+
+          {/* Languages */}
+          {languages && languages.length > 0 && (
+            <section className="break-inside-avoid">
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+                Idiomas
+              </h2>
+              <ul className="list-none space-y-2">
+                {languages.map((lang, index) => (
+                  <li key={index} className="text-slate-700 text-sm flex items-center justify-between dark:text-white">
+                    <span>{lang}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${templateStyles.accent.replace('text', 'bg')}`}></span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
     </div>
