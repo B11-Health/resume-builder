@@ -104,13 +104,28 @@ const ResumeBuilder: React.FC = () => {
   }, []);
 
   const handlePrint = () => {
-    // Ensure preview is visible on mobile before printing
-    if (isMobile && !showPreviewMobile) {
+    const shouldRevealPreview = isMobile && !showPreviewMobile;
+
+    if (shouldRevealPreview) {
       setShowPreviewMobile(true);
     }
 
-    // Give the browser a moment to render the preview before invoking print
-    setTimeout(() => window.print(), 300);
+    const waitForRender = shouldRevealPreview ? 450 : 150;
+
+    setTimeout(() => {
+      const previewElement = document.getElementById('resume-preview');
+
+      if (!previewElement) {
+        alert('No se encontró la vista previa para imprimir.');
+        return;
+      }
+
+      previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }, waitForRender);
   };
 
   return (
