@@ -111,7 +111,7 @@ interface ResumePreviewProps {
 }
 
 export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = 'modern', themeOverrides }) => {
-  const { personalInfo, summary, experience, education, skills, languages } = data;
+  const { personalInfo, summary, experience, education, skills, languages, htmlResume } = data;
   const templateStyles = TEMPLATE_STYLES[template] ?? TEMPLATE_STYLES.modern;
 
   const accentColor = themeOverrides?.accentColor || templateStyles.accentColor;
@@ -122,6 +122,26 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   const headerBackgroundStyle = templateStyles.headerGradient && !themeOverrides?.headerBgColor
     ? { background: templateStyles.headerGradient }
     : { backgroundColor: headerBgColor };
+
+  const hasCustomHtml = Boolean(htmlResume?.trim());
+
+  if (hasCustomHtml) {
+    return (
+      <div
+        id="resume-preview"
+        className="bg-white shadow-2xl w-full max-w-[8.5in] min-h-[11in] mx-auto text-slate-800 print:shadow-none"
+        style={{
+          printColorAdjust: 'exact',
+          WebkitPrintColorAdjust: 'exact',
+        }}
+      >
+        <div
+          className="p-6 md:p-10"
+          dangerouslySetInnerHTML={{ __html: htmlResume || '' }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
