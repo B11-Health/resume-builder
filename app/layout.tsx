@@ -65,9 +65,9 @@ export default function RootLayout({
             .print-only { display: block !important; }
 
             #resume-preview {
-              width: calc(8.5in - 1in) !important;
-              max-width: calc(8.5in - 1in) !important;
-              min-height: calc(11in - 1in) !important;
+              width: calc(8.27in - 1in) !important;
+              max-width: calc(8.27in - 1in) !important;
+              min-height: calc(11.69in - 1in) !important;
               margin: 0 auto !important;
               box-shadow: none !important;
               visibility: visible;

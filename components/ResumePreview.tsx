@@ -126,7 +126,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   return (
     <div
       id="resume-preview"
-      className={`bg-white shadow-2xl w-full max-w-[8.5in] min-h-[11in] mx-auto text-slate-800 ${fontClass} print:shadow-none`}
+      className={`bg-white shadow-2xl w-full max-w-[8.27in] min-h-[11.69in] mx-auto text-slate-800 ${fontClass} print:shadow-none`}
       style={{
         printColorAdjust: 'exact',
         WebkitPrintColorAdjust: 'exact',
@@ -215,9 +215,12 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
                       <span className={`font-bold uppercase tracking-wide`} style={{ color: accentColor }}>{exp.company}</span>
                       <span className="text-slate-500 font-medium italic">{exp.startDate} – {exp.endDate}</span>
                     </div>
-                    <ul className="list-disc list-outside ml-4 space-y-1.5 text-slate-700 text-sm md:text-base">
+                    <ul className="space-y-2 text-slate-700 text-sm md:text-base">
                       {exp.description && exp.description.map((point, idx) => (
-                        <li key={idx} className="pl-1">{point}</li>
+                        <li key={idx} className="flex items-start gap-3 leading-relaxed">
+                          <span className="mt-1.5 h-2 w-2 rounded-full border border-slate-600 flex-shrink-0" aria-hidden="true"></span>
+                          <span className="flex-1">{point}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
