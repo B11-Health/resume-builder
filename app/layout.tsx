@@ -45,8 +45,8 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page {
-              margin: 0;
-              size: auto;
+              size: Letter;
+              margin: 0.5in;
             }
             body {
               margin: 0;
@@ -65,15 +65,15 @@ export default function RootLayout({
             .print-only { display: block !important; }
 
             #resume-preview {
-              width: 100% !important;
-              max-width: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
+              width: calc(8.5in - 1in) !important;
+              max-width: calc(8.5in - 1in) !important;
+              min-height: calc(11in - 1in) !important;
+              margin: 0 auto !important;
               box-shadow: none !important;
               visibility: visible;
-              position: absolute;
-              top: 0;
-              left: 0;
+              position: relative;
+              top: auto;
+              left: auto;
             }
           }
         `}} />

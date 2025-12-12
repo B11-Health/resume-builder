@@ -88,7 +88,11 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   return (
     <div
       id="resume-preview"
-      className={`bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] mx-auto text-slate-800 ${fontClass} print:shadow-none print:w-full print:max-w-none`}
+      className={`bg-white shadow-2xl w-full max-w-[8.5in] min-h-[11in] mx-auto text-slate-800 ${fontClass} print:shadow-none`}
+      style={{
+        printColorAdjust: 'exact',
+        WebkitPrintColorAdjust: 'exact',
+      }}
     >
       {/* Header Section */}
       <div
