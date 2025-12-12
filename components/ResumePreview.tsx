@@ -5,68 +5,110 @@ import { ResumeData } from '../types';
 
 export type TemplateStyle = 'modern' | 'minimal' | 'contrast';
 
-const TEMPLATE_STYLES: Record<TemplateStyle, {
-  headerBg: string;
-  headerText: string;
-  accent: string;
-  sidebarBg: string;
-  sidebarBorder: string;
-  bodyFont: string;
-  pillBg: string;
-}> = {
+export type ThemeOverrides = {
+  accentColor?: string;
+  headerBgColor?: string;
+  headerTextColor?: string;
+  bodyFont?: 'sans' | 'serif';
+};
+
+type TemplateStyleConfig = {
+  headerBgColor: string;
+  headerGradient?: string;
+  headerTitleColor: string;
+  headerSubtitleColor: string;
+  accentColor: string;
+  sidebarBgColor: string;
+  sidebarBorderColor: string;
+  sidebarTextColor: string;
+  bodyFont: 'font-sans' | 'font-serif';
+  pillBgColor: string;
+  pillTextColor: string;
+};
+
+const TEMPLATE_STYLES: Record<TemplateStyle, TemplateStyleConfig> = {
   modern: {
-    headerBg: 'bg-slate-900 text-white',
-    headerText: 'text-blue-200',
-    accent: 'text-pr-blue',
-    sidebarBg: 'bg-slate-50',
-    sidebarBorder: 'border-slate-200',
+    headerBgColor: '#0f172a',
+    headerTitleColor: '#ffffff',
+    headerSubtitleColor: '#bfdbfe',
+    accentColor: '#2563eb',
+    sidebarBgColor: '#f8fafc',
+    sidebarBorderColor: '#e2e8f0',
+    sidebarTextColor: '#0f172a',
     bodyFont: 'font-sans',
-    pillBg: 'bg-blue-100 text-slate-900',
+    pillBgColor: '#dbeafe',
+    pillTextColor: '#0f172a',
   },
   minimal: {
-    headerBg: 'bg-white text-slate-900 border-b border-slate-200',
-    headerText: 'text-pr-blue',
-    accent: 'text-slate-700',
-    sidebarBg: 'bg-white',
-    sidebarBorder: 'border-slate-100',
+    headerBgColor: '#ffffff',
+    headerTitleColor: '#0f172a',
+    headerSubtitleColor: '#2563eb',
+    accentColor: '#1f2937',
+    sidebarBgColor: '#ffffff',
+    sidebarBorderColor: '#e2e8f0',
+    sidebarTextColor: '#0f172a',
     bodyFont: 'font-serif',
-    pillBg: 'bg-slate-200 text-slate-800',
+    pillBgColor: '#e2e8f0',
+    pillTextColor: '#0f172a',
   },
   contrast: {
-    headerBg: 'bg-gradient-to-r from-pr-blue to-pr-dark-blue text-white',
-    headerText: 'text-yellow-100',
-    accent: 'text-yellow-100',
-    sidebarBg: 'bg-slate-900 text-white',
-    sidebarBorder: 'border-slate-700',
+    headerBgColor: '#0f172a',
+    headerGradient: 'linear-gradient(135deg, #2563eb 0%, #0f172a 100%)',
+    headerTitleColor: '#ffffff',
+    headerSubtitleColor: '#fef08a',
+    accentColor: '#fef08a',
+    sidebarBgColor: '#0f172a',
+    sidebarBorderColor: '#1f2937',
+    sidebarTextColor: '#e2e8f0',
     bodyFont: 'font-sans',
-    pillBg: 'bg-white text-slate-900',
+    pillBgColor: '#ffffff',
+    pillTextColor: '#0f172a',
   },
 };
 
 interface ResumePreviewProps {
   data: ResumeData;
   template?: TemplateStyle;
+  themeOverrides?: ThemeOverrides;
 }
 
-export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = 'modern' }) => {
+export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = 'modern', themeOverrides }) => {
   const { personalInfo, summary, experience, education, skills, languages } = data;
   const templateStyles = TEMPLATE_STYLES[template] ?? TEMPLATE_STYLES.modern;
+
+  const accentColor = themeOverrides?.accentColor || templateStyles.accentColor;
+  const headerBgColor = themeOverrides?.headerBgColor || templateStyles.headerBgColor;
+  const headerTextColor = themeOverrides?.headerTextColor || templateStyles.headerSubtitleColor;
+  const fontClass = themeOverrides?.bodyFont === 'serif' ? 'font-serif' : templateStyles.bodyFont;
+  const sidebarTextColor = templateStyles.sidebarTextColor;
+  const headerBackgroundStyle = templateStyles.headerGradient && !themeOverrides?.headerBgColor
+    ? { background: templateStyles.headerGradient }
+    : { backgroundColor: headerBgColor };
 
   return (
     <div
       id="resume-preview"
-      className={`bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] mx-auto text-slate-800 ${templateStyles.bodyFont} print:shadow-none print:w-full print:max-w-none`}
+      className={`bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] mx-auto text-slate-800 ${fontClass} print:shadow-none print:w-full print:max-w-none`}
     >
       {/* Header Section */}
-      <div className={`${templateStyles.headerBg} p-10 print:${templateStyles.headerBg} print-color-adjust-exact`}>
-        <h1 className="text-4xl md:text-5xl font-bold font-serif tracking-tight uppercase mb-2">
+      <div
+        className={`p-10 print-color-adjust-exact`}
+        style={headerBackgroundStyle}
+      >
+        <h1
+          className="text-4xl md:text-5xl font-bold font-serif tracking-tight uppercase mb-2"
+          style={{ color: templateStyles.headerTitleColor }}
+        >
           {personalInfo.fullName}
         </h1>
-        <p className={`text-xl ${templateStyles.headerText} tracking-wider uppercase font-medium mb-6`}>
+        <p
+          className={`text-xl tracking-wider uppercase font-medium mb-6`}
+          style={{ color: headerTextColor }}
+        >
           {personalInfo.jobTitle}
         </p>
 
-        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-blue-50/90 font-light">
+        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm font-light" style={{ color: headerTextColor }}>
           {personalInfo.email && (
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,9 +142,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row h-full">
-        {/* Main Column */}
-        <div className="w-full md:w-2/3 p-8 md:p-10 pr-6">
+        <div className="flex flex-col md:flex-row h-full">
+          {/* Main Column */}
+          <div className="w-full md:w-2/3 p-8 md:p-10 pr-6">
           {/* Summary */}
           {summary && (
             <section className="mb-8">
@@ -128,7 +170,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
                       <h3 className="text-xl font-bold text-slate-800">{exp.role}</h3>
                     </div>
                     <div className="flex justify-between items-center text-sm mb-3">
-                      <span className={`${templateStyles.accent} font-bold uppercase tracking-wide`}>{exp.company}</span>
+                      <span className={`font-bold uppercase tracking-wide`} style={{ color: accentColor }}>{exp.company}</span>
                       <span className="text-slate-500 font-medium italic">{exp.startDate} – {exp.endDate}</span>
                     </div>
                     <ul className="list-disc list-outside ml-4 space-y-1.5 text-slate-700 text-sm md:text-base">
@@ -144,16 +186,27 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
         </div>
 
         {/* Sidebar Column */}
-        <div className={`w-full md:w-1/3 ${templateStyles.sidebarBg} p-8 md:p-10 border-l ${templateStyles.sidebarBorder} print:${templateStyles.sidebarBg} print-color-adjust-exact`}>
+        <div
+          className={`w-full md:w-1/3 p-8 md:p-10 border-l print-color-adjust-exact`}
+          style={{
+            background: templateStyles.sidebarBgColor,
+            borderColor: templateStyles.sidebarBorderColor,
+            color: sidebarTextColor,
+          }}
+        >
           {/* Skills */}
           {skills && skills.length > 0 && (
             <section className="mb-8 break-inside-avoid">
-              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1" style={{ color: sidebarTextColor }}>
                 Habilidades
               </h2>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <span key={index} className={`text-sm font-medium block w-full mb-1 px-2 py-1 rounded ${templateStyles.pillBg}`}>
+                  <span
+                    key={index}
+                    className={`text-sm font-medium block w-full mb-1 px-2 py-1 rounded`}
+                    style={{ backgroundColor: templateStyles.pillBgColor, color: templateStyles.pillTextColor }}
+                  >
                     {skill}
                   </span>
                 ))}
@@ -164,14 +217,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
           {/* Education */}
           {education && education.length > 0 && (
             <section className="mb-8 break-inside-avoid">
-              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1" style={{ color: sidebarTextColor }}>
                 Educación
               </h2>
               <div className="space-y-5">
                 {education.map((edu, index) => (
                   <div key={index}>
-                    <h3 className="font-bold text-slate-800 leading-tight mb-1 dark:text-white">{edu.institution}</h3>
-                    <div className={`${templateStyles.accent} text-sm font-medium mb-1`}>{edu.degree}</div>
+                    <h3 className="font-bold leading-tight mb-1" style={{ color: sidebarTextColor }}>{edu.institution}</h3>
+                    <div className={`text-sm font-medium mb-1`} style={{ color: accentColor }}>{edu.degree}</div>
                     <div className="text-xs text-slate-500 uppercase">{edu.startDate} – {edu.endDate}</div>
                   </div>
                 ))}
@@ -182,14 +235,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
           {/* Languages */}
           {languages && languages.length > 0 && (
             <section className="break-inside-avoid">
-              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1 text-slate-900 dark:text-white">
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-slate-300 pb-1" style={{ color: sidebarTextColor }}>
                 Idiomas
               </h2>
               <ul className="list-none space-y-2">
                 {languages.map((lang, index) => (
-                  <li key={index} className="text-slate-700 text-sm flex items-center justify-between dark:text-white">
+                  <li key={index} className="text-sm flex items-center justify-between" style={{ color: sidebarTextColor }}>
                     <span>{lang}</span>
-                    <span className={`h-1.5 w-1.5 rounded-full ${templateStyles.accent.replace('text', 'bg')}`}></span>
+                    <span className={`h-1.5 w-1.5 rounded-full`} style={{ backgroundColor: accentColor }}></span>
                   </li>
                 ))}
               </ul>
