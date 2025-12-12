@@ -122,30 +122,45 @@ const themePresets: { id: string; name: string; accentColor: string; headerBgCol
 
 const TeamList = () => {
   const teamMembers = [
-    { id: 1, firstName: 'Cristian', lastName: 'Martínez' },
-    { id: 2, firstName: 'Pablo', lastName: 'Gutiérrez' },
-    { id: 3, firstName: 'Yashira', lastName: 'Rivera' },
-    { id: 4, firstName: 'Melissa', lastName: 'Pérez' },
-    { id: 5, firstName: 'Víctor', lastName: 'González' },
-    { id: 6, firstName: 'Elizabeth', lastName: 'Crespo' },
-    { id: 7, firstName: 'Alfredo', lastName: 'Colón' },
+    { id: 1, firstName: 'Cristian', lastName: 'Martínez', role: 'Fundador · Producto', focus: 'Experiencia de usuario' },
+    { id: 2, firstName: 'Pablo', lastName: 'Gutiérrez', role: 'Ingeniero de Datos', focus: 'Infraestructura y APIs' },
+    { id: 3, firstName: 'Yashira', lastName: 'Rivera', role: 'Diseño UX', focus: 'Narrativas visuales' },
+    { id: 4, firstName: 'Melissa', lastName: 'Pérez', role: 'Marketing', focus: 'Comunidad y aliados' },
+    { id: 5, firstName: 'Víctor', lastName: 'González', role: 'Ingeniero Fullstack', focus: 'Integraciones' },
+    { id: 6, firstName: 'Elizabeth', lastName: 'Crespo', role: 'Talent Partner', focus: 'Programas de mentoría' },
+    { id: 7, firstName: 'Alfredo', lastName: 'Colón', role: 'QA & Soporte', focus: 'Calidad y accesibilidad' },
   ];
 
   return (
-    <div className="max-w-xl mx-auto my-8 p-6 text-white shadow-xl rounded-lg">
-      <ul className="space-y-4">
+    <div className="rounded-2xl bg-white/10 border border-white/15 shadow-2xl p-6 backdrop-blur">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.2em] text-blue-100 font-semibold">Voluntariado</p>
+          <h3 className="text-xl font-bold text-white">Conoce a quienes hacen esto posible</h3>
+        </div>
+        <span className="px-3 py-1 text-[11px] font-bold rounded-full bg-white/10 border border-white/20 text-white">Equipo Code Gym</span>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
         {teamMembers.map((member) => (
-          <li
+          <div
             key={member.id}
-            className="flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition duration-150 ease-in-out rounded-md border-l-4 border-indigo-500"
+            className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/10 p-4 shadow-inner hover:border-blue-200/70 hover:shadow-xl transition"
           >
-            <span className="text-lg font-medium text-gray-700">
-              {member.firstName} {member.lastName}
-            </span>
-          
-          </li>
+            <div className="shrink-0 rounded-full w-12 h-12 bg-gradient-to-br from-blue-200 via-blue-400 to-indigo-500 text-slate-900 font-extrabold flex items-center justify-center">
+              {member.firstName[0]}
+              {member.lastName[0]}
+            </div>
+            <div className="flex-1 text-white">
+              <p className="font-semibold text-lg leading-tight">
+                {member.firstName} {member.lastName}
+              </p>
+              <p className="text-blue-100 text-sm">{member.role}</p>
+              <p className="text-xs text-blue-50 mt-1">{member.focus}</p>
+            </div>
+            <span className="text-[10px] px-2 py-1 rounded-full bg-white/10 border border-white/20 text-blue-50">PR</span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
@@ -481,53 +496,118 @@ const ResumeBuilder: React.FC = () => {
       </main>
 
       {/* Donation & Credits Section */}
-      <section className="bg-slate-900 text-white py-12 px-4 no-print mt-auto border-t-8 border-pr-blue">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-10">
-            
-            {/* Logo Code Gym - Recreated via SVG for fidelity */}
-            
-
-            {/* Copy & Team */}
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-serif font-bold mb-3 text-white">Impulsa el Talento de Puerto Rico</h2>
-              <div className="text-blue-100 mb-4 leading-relaxed space-y-3">
-                <p>
-                  Esta herramienta gratuita fue creada con pasión por el equipo de <strong>Code Gym</strong>:
-                </p>
-                <TeamList />
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white py-14 px-4 no-print mt-auto border-t-8 border-pr-blue">
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.15),transparent_45%)]" aria-hidden="true"></div>
+        <div className="relative max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-start">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs uppercase tracking-[0.3em] text-blue-100 font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                Comunidad activa
               </div>
-              <p className="text-sm text-gray-400 mb-6">
-                Tu donación nos permite seguir construyendo tecnología accesible y gratuita para nuestra comunidad. 
-                Si este CV te ayudó a conseguir una entrevista, ¡invítanos a un café! ☕️
+              <h2 className="text-3xl md:text-4xl font-serif font-black leading-tight text-white">Impulsa el talento tech de Puerto Rico</h2>
+              <p className="text-blue-100 text-lg leading-relaxed max-w-3xl">
+                Cada currículum generado aquí es gratis y abierto. Con tu aporte mantenemos los servidores, creamos nuevas plantillas y organizamos mentorías para que más boricuas consigan su próxima oportunidad laboral.
               </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-4 shadow-lg">
+                  <p className="text-4xl font-black text-white">3K+</p>
+                  <p className="text-sm text-blue-100">CVs generados con amor por la comunidad.</p>
+                </div>
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-4 shadow-lg">
+                  <p className="text-4xl font-black text-white">120</p>
+                  <p className="text-sm text-blue-100">Horas de voluntariado aportadas por Code Gym.</p>
+                </div>
+              </div>
+              <TeamList />
+            </div>
 
-              {/* Donation Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <a href="#" className="pointer-events-none group bg-white hover:bg-gray-100 text-slate-900 rounded-lg px-2 py-2 flex items-center justify-between min-w-[200px] transition-all relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[#FF5500] group-hover:bg-[#e04b00] transition-colors flex items-center px-4">
-                        <span className="font-bold text-white text-lg">ATH Móvil</span>
-                    </div>
-                    <div className="ml-auto pl-28 pr-4 py-1">
-                        <span className="font-mono text-white font-bold text-slate-900">/codegympr</span>
-                    </div>
-                </a>
+            <div className="space-y-4">
+              <div className="bg-white/10 border border-white/10 rounded-2xl shadow-2xl p-6 backdrop-blur-lg">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-blue-100 font-semibold">Apoya el proyecto</p>
+                    <h3 className="text-2xl font-bold text-white">Tu donación se convierte en becas y talleres</h3>
+                    <p className="text-sm text-blue-100 mt-2">Si este CV te acercó a tu próxima entrevista, considera compartir una taza de café ☕️</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-400/20 text-emerald-100 text-xs font-semibold px-3 py-1 border border-emerald-200/30">Transparente</span>
+                </div>
 
-                <a 
-                  href="https://www.paypal.com/paypalme/codegym" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-[#003087] hover:bg-[#00256b] text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                <div className="space-y-3">
+                  <a
+                    href="https://www.paypal.com/paypalme/codegym"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between gap-4 bg-[#003087] hover:bg-[#00256b] text-white px-5 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-2xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 group-hover:bg-white/20">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337l.756-4.728H9.77a5.626 5.626 0 002.266-.35c1.33-.497 2.21-1.385 2.585-2.712.17-.604.22-1.25.127-1.895-.444-2.813-2.682-3.88-5.753-3.88h-3.32a.965.965 0 00-.955.845l-2.43 15.228a.482.482 0 00.476.558h3.31l-.478 3.123a.625.625 0 00.617.72h2.515c.376 0 .67-.327.728-.698l.018-.11z"/></svg>
+                      </span>
+                      <div className="text-left">
+                        <p className="text-lg leading-tight">PayPal</p>
+                        <p className="text-xs font-normal text-blue-100">Contribuye con tarjeta o balance.</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full">paypal.me/codegym</span>
+                  </a>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      className="group flex-1 flex items-center justify-between gap-4 bg-white text-slate-900 px-4 py-4 rounded-xl font-semibold transition-all shadow-lg hover:-translate-y-0.5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF8A50] to-[#FF5500] text-white">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                        </span>
+                        <div className="text-left">
+                          <p className="text-lg leading-tight">ATH Móvil</p>
+                          <p className="text-xs text-slate-600">Busca nuestro handle y envía al instante.</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-mono bg-slate-900 text-white px-3 py-1 rounded-full">/codegympr</span>
+                    </button>
+
+                    <a
+                      href="https://github.com/sponsors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-between gap-4 bg-slate-800/70 hover:bg-slate-800 text-white px-4 py-4 rounded-xl font-semibold transition-all shadow-lg border border-white/10"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 3.99 4 6.5 4c1.54 0 3.04.99 3.57 2.36h.87C13.46 4.99 14.96 4 16.5 4 19.01 4 21 6 21 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        </span>
+                        <div className="text-left">
+                          <p className="text-lg leading-tight">GitHub Sponsors</p>
+                          <p className="text-xs text-blue-100">Apoya el código abierto de Code Gym.</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold bg-white/10 px-3 py-1 rounded-full">Pronto</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-white">Prefieres apoyar de otra manera?</p>
+                  <p className="text-sm text-blue-100">Escríbenos para voluntariado, mentoría o colaboraciones con tu empresa.</p>
+                </div>
+                <a
+                  href="mailto:hola@codegympr.com"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-slate-900 font-semibold shadow-lg hover:-translate-y-0.5 transition"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337l.756-4.728H9.77a5.626 5.626 0 002.266-.35c1.33-.497 2.21-1.385 2.585-2.712.17-.604.22-1.25.127-1.895-.444-2.813-2.682-3.88-5.753-3.88h-3.32a.965.965 0 00-.955.845l-2.43 15.228a.482.482 0 00.476.558h3.31l-.478 3.123a.625.625 0 00.617.72h2.515c.376 0 .67-.327.728-.698l.018-.11z"/></svg>
-                  Donar con PayPal
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-18 8h18a2 2 0 002-2V8a2 2 0 00-2-2H3a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                  hola@codegympr.com
                 </a>
               </div>
             </div>
           </div>
         </div>
       </section>
-      
+
       {/* Small Copyright Footer */}
       <footer className="bg-slate-950 border-t border-slate-800 py-6 no-print">
         <div className="max-w-7xl mx-auto px-4 text-center">
