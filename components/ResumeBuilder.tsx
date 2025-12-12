@@ -491,10 +491,12 @@ const ResumeBuilder: React.FC = () => {
             {/* Copy & Team */}
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-2xl font-serif font-bold mb-3 text-white">Impulsa el Talento de Puerto Rico</h2>
-              <p className="text-blue-100 mb-4 leading-relaxed">
-                Esta herramienta gratuita fue creada con pasión por el equipo de <strong>Code Gym</strong>: 
+              <div className="text-blue-100 mb-4 leading-relaxed space-y-3">
+                <p>
+                  Esta herramienta gratuita fue creada con pasión por el equipo de <strong>Code Gym</strong>:
+                </p>
                 <TeamList />
-              </p>
+              </div>
               <p className="text-sm text-gray-400 mb-6">
                 Tu donación nos permite seguir construyendo tecnología accesible y gratuita para nuestra comunidad. 
                 Si este CV te ayudó a conseguir una entrevista, ¡invítanos a un café! ☕️
