@@ -119,6 +119,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   const headerTextColor = themeOverrides?.headerTextColor || templateStyles.headerSubtitleColor;
   const fontClass = themeOverrides?.bodyFont === 'serif' ? 'font-serif' : templateStyles.bodyFont;
   const sidebarTextColor = templateStyles.sidebarTextColor;
+  const headerContrastBorder = templateStyles.headerGradient ? 'rgba(255,255,255,0.1)' : `${accentColor}1a`;
   const headerBackgroundStyle = templateStyles.headerGradient && !themeOverrides?.headerBgColor
     ? { background: templateStyles.headerGradient }
     : { backgroundColor: headerBgColor };
@@ -146,15 +147,17 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   return (
     <div
       id="resume-preview"
-      className={`bg-white shadow-2xl w-full max-w-[8.27in] min-h-[11.69in] mx-auto text-slate-800 ${fontClass} print:shadow-none`}
+      className={`relative bg-white shadow-2xl w-full max-w-[8.27in] min-h-[11.69in] mx-auto text-slate-800 ${fontClass} print:shadow-none rounded-[28px] overflow-hidden border border-slate-200/80 print:border-0 print:rounded-none`}
       style={{
         printColorAdjust: 'exact',
         WebkitPrintColorAdjust: 'exact',
+        backgroundImage:
+          'radial-gradient(circle at 20% 20%, rgba(99,102,241,0.04), transparent 25%), radial-gradient(circle at 80% 10%, rgba(14,165,233,0.04), transparent 22%)',
       }}
     >
       {/* Header Section */}
       <div
-        className={`p-10 print-color-adjust-exact`}
+        className={`p-10 pb-8 print-color-adjust-exact border-b`}
         style={headerBackgroundStyle}
       >
         <h1
@@ -170,9 +173,12 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
           {personalInfo.jobTitle}
         </p>
 
-        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm font-light" style={{ color: headerTextColor }}>
+        <div className="flex flex-wrap gap-3 text-sm font-medium">
           {personalInfo.email && (
-            <div className="flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur shadow-sm"
+              style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
               </svg>
@@ -180,7 +186,10 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
             </div>
           )}
           {personalInfo.phone && (
-            <div className="flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur shadow-sm"
+              style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
               </svg>
@@ -188,29 +197,35 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
             </div>
           )}
           {personalInfo.location && (
-            <div className="flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur shadow-sm"
+              style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
               {personalInfo.location}
             </div>
           )}
           {personalInfo.linkedin && (
-            <div className="flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur shadow-sm"
+              style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
+            >
               <span className="font-bold bg-white text-slate-900 rounded-sm px-1 text-xs">in</span> {personalInfo.linkedin}
             </div>
           )}
         </div>
       </div>
 
-        <div className="flex flex-col md:flex-row h-full">
+      <div className="flex flex-col md:flex-row h-full">
           {/* Main Column */}
-          <div className="w-full md:w-2/3 p-8 md:p-10 pr-6">
+          <div className="w-full md:w-2/3 p-8 md:p-10 pr-6 space-y-10 bg-white/70">
           {/* Summary */}
           {summary && (
-            <section className="mb-8">
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-4 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
+            <section className="rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-4 pb-3 flex items-center gap-2 border-b border-slate-100">
                 <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
                 Perfil Profesional
               </h2>
@@ -220,16 +235,16 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
 
           {/* Experience */}
           {experience && experience.length > 0 && (
-            <section className="mb-8">
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-6 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
+            <section className="rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-6 pb-3 flex items-center gap-2 border-b border-slate-100">
                 <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
                 Experiencia Laboral
               </h2>
               <div className="space-y-6">
                 {experience.map((exp, index) => (
-                  <div key={index} className="break-inside-avoid">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h3 className="text-xl font-bold text-slate-800">{exp.role}</h3>
+                  <div key={index} className="break-inside-avoid rounded-xl bg-white/70 p-4 border border-slate-100">
+                    <div className="flex justify-between items-baseline mb-2">
+                      <h3 className="text-xl font-bold text-slate-800 leading-tight">{exp.role}</h3>
                     </div>
                     <div className="flex justify-between items-center text-sm mb-3">
                       <span className={`font-bold uppercase tracking-wide`} style={{ color: accentColor }}>{exp.company}</span>
