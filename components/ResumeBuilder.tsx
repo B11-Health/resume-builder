@@ -26,6 +26,24 @@ const templates: { id: TemplateStyle; name: string; description: string; badge: 
     description: 'Gradiente vibrante y sidebar oscuro para destacar.',
     badge: 'Creativo',
   },
+  {
+    id: 'elegant',
+    name: 'Elegante',
+    description: 'Tonos vino y rosa pálido para un look sofisticado.',
+    badge: 'Premium',
+  },
+  {
+    id: 'vibrant',
+    name: 'Vibrante',
+    description: 'Gradientes multicolor y energía juvenil.',
+    badge: 'Colorido',
+  },
+  {
+    id: 'technical',
+    name: 'Tech',
+    description: 'Oscuro con acentos neón para roles digitales.',
+    badge: 'Digital',
+  },
 ];
 
 const templateThemeDefaults: Record<TemplateStyle, Required<ThemeOverrides>> = {
@@ -47,7 +65,60 @@ const templateThemeDefaults: Record<TemplateStyle, Required<ThemeOverrides>> = {
     headerTextColor: '#fef08a',
     bodyFont: 'sans',
   },
+  elegant: {
+    accentColor: '#be123c',
+    headerBgColor: '#f8fafc',
+    headerTextColor: '#9d174d',
+    bodyFont: 'serif',
+  },
+  vibrant: {
+    accentColor: '#22d3ee',
+    headerBgColor: '#0f172a',
+    headerTextColor: '#cffafe',
+    bodyFont: 'sans',
+  },
+  technical: {
+    accentColor: '#7c3aed',
+    headerBgColor: '#0a0f1f',
+    headerTextColor: '#7dd3fc',
+    bodyFont: 'sans',
+  },
 };
+
+const themePresets: { id: string; name: string; accentColor: string; headerBgColor: string; headerTextColor: string; bodyFont: 'sans' | 'serif'; }[] = [
+  {
+    id: 'atlantic',
+    name: 'Atlántico',
+    accentColor: '#0ea5e9',
+    headerBgColor: '#0f172a',
+    headerTextColor: '#bae6fd',
+    bodyFont: 'sans',
+  },
+  {
+    id: 'sunset',
+    name: 'Atardecer',
+    accentColor: '#fb923c',
+    headerBgColor: '#1c1917',
+    headerTextColor: '#fed7aa',
+    bodyFont: 'serif',
+  },
+  {
+    id: 'forest',
+    name: 'Bosque',
+    accentColor: '#22c55e',
+    headerBgColor: '#0b1725',
+    headerTextColor: '#bbf7d0',
+    bodyFont: 'sans',
+  },
+  {
+    id: 'sand',
+    name: 'Arena',
+    accentColor: '#d97706',
+    headerBgColor: '#fffbeb',
+    headerTextColor: '#92400e',
+    bodyFont: 'serif',
+  },
+];
 
 const TeamList = () => {
   const teamMembers = [
@@ -237,28 +308,31 @@ const ResumeBuilder: React.FC = () => {
                </div>
                <span className="text-[10px] uppercase tracking-[0.15em] font-bold bg-pr-blue text-white px-3 py-1 rounded-full">Nuevo</span>
              </div>
-             <div className="grid grid-cols-1 gap-3">
-               {templates.map((template) => (
-                 <button
-                   key={template.id}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {templates.map((template) => (
+                  <button
+                    key={template.id}
                    onClick={() => {
                      setSelectedTemplate(template.id);
                      setThemeOverrides(templateThemeDefaults[template.id]);
                    }}
-                   className={`text-left p-4 rounded-lg border transition-all duration-200 flex justify-between items-center gap-3 hover:-translate-y-[2px] ${selectedTemplate === template.id ? 'border-pr-blue bg-blue-50 shadow-md' : 'border-gray-200 bg-slate-50 hover:border-pr-blue/50'}`}
-                 >
-                   <div>
-                     <p className="text-xs uppercase text-slate-500 font-semibold mb-1 flex items-center gap-2">
-                       <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white border text-[10px] font-bold text-slate-600">{template.badge}</span>
-                       Plantilla
-                     </p>
-                     <h3 className="text-lg font-bold text-slate-800">{template.name}</h3>
-                     <p className="text-sm text-slate-600">{template.description}</p>
-                   </div>
-                   <div className={`w-16 h-16 rounded-md border ${selectedTemplate === template.id ? 'border-pr-blue bg-gradient-to-br from-pr-blue/20 to-pr-dark-blue/30' : 'border-slate-200 bg-white'}`}></div>
-                 </button>
-               ))}
-           </div>
+                    className={`text-left p-4 rounded-lg border transition-all duration-200 flex justify-between items-center gap-3 hover:-translate-y-[2px] ${selectedTemplate === template.id ? 'border-pr-blue bg-blue-50 shadow-md' : 'border-gray-200 bg-slate-50 hover:border-pr-blue/50'}`}
+                  >
+                    <div>
+                      <p className="text-xs uppercase text-slate-500 font-semibold mb-1 flex items-center gap-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white border text-[10px] font-bold text-slate-600">{template.badge}</span>
+                        Plantilla
+                      </p>
+                      <h3 className="text-lg font-bold text-slate-800">{template.name}</h3>
+                      <p className="text-sm text-slate-600">{template.description}</p>
+                    </div>
+                    <div className={`w-16 h-16 rounded-md border overflow-hidden ${selectedTemplate === template.id ? 'border-pr-blue bg-gradient-to-br from-pr-blue/20 to-pr-dark-blue/30' : 'border-slate-200 bg-white'}`}>
+                      <div className="h-1/2" style={{ background: templateThemeDefaults[template.id].headerBgColor }}></div>
+                      <div className="h-1/2" style={{ background: templateThemeDefaults[template.id].accentColor }}></div>
+                    </div>
+                  </button>
+                ))}
+            </div>
           </div>
 
            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
@@ -276,10 +350,10 @@ const ResumeBuilder: React.FC = () => {
                </button>
              </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-                 Color de acento
-                 <input
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+                  Color de acento
+                  <input
                    type="color"
                    value={themeOverrides.accentColor}
                    onChange={(e) => setThemeOverrides((prev) => ({ ...prev, accentColor: e.target.value }))}
@@ -307,9 +381,9 @@ const ResumeBuilder: React.FC = () => {
                  />
                </label>
 
-               <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                 Tipografía principal
-                 <div className="flex gap-2">
+                <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Tipografía principal
+                  <div className="flex gap-2">
                    <button
                      type="button"
                      onClick={() => setThemeOverrides((prev) => ({ ...prev, bodyFont: 'sans' }))}
@@ -324,10 +398,39 @@ const ResumeBuilder: React.FC = () => {
                    >
                      Serif
                    </button>
-                 </div>
-               </div>
-             </div>
-           </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Temas rápidos</h3>
+                    <p className="text-xs text-slate-500">Aplica una combinación curada en un click.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {themePresets.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setThemeOverrides(preset)}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 hover:border-pr-blue/60 hover:-translate-y-[1px] transition shadow-sm bg-white"
+                    >
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-bold text-slate-800">{preset.name}</span>
+                        <span className="text-xs text-slate-500">{preset.bodyFont === 'serif' ? 'Tipografía Serif' : 'Tipografía Sans'}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-8 h-8 rounded-full border" style={{ backgroundColor: preset.headerBgColor }}></span>
+                        <span className="w-8 h-8 rounded-full border" style={{ backgroundColor: preset.accentColor }}></span>
+                        <span className="w-8 h-8 rounded-full border" style={{ backgroundColor: preset.headerTextColor }}></span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 text-sm text-slate-700 shadow-sm">
               <h3 className="font-bold mb-3 flex items-center gap-2 text-pr-blue">

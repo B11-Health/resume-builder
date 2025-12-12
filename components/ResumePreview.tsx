@@ -3,7 +3,7 @@
 import React from 'react';
 import { ResumeData } from '../types';
 
-export type TemplateStyle = 'modern' | 'minimal' | 'contrast';
+export type TemplateStyle = 'modern' | 'minimal' | 'contrast' | 'elegant' | 'vibrant' | 'technical';
 
 export type ThemeOverrides = {
   accentColor?: string;
@@ -63,6 +63,44 @@ const TEMPLATE_STYLES: Record<TemplateStyle, TemplateStyleConfig> = {
     bodyFont: 'font-sans',
     pillBgColor: '#ffffff',
     pillTextColor: '#0f172a',
+  },
+  elegant: {
+    headerBgColor: '#f8fafc',
+    headerTitleColor: '#0f172a',
+    headerSubtitleColor: '#9d174d',
+    accentColor: '#be123c',
+    sidebarBgColor: '#fff1f2',
+    sidebarBorderColor: '#fecdd3',
+    sidebarTextColor: '#0f172a',
+    bodyFont: 'font-serif',
+    pillBgColor: '#ffe4e6',
+    pillTextColor: '#9f1239',
+  },
+  vibrant: {
+    headerBgColor: '#0f172a',
+    headerGradient: 'linear-gradient(120deg, #34d399 0%, #22d3ee 50%, #6366f1 100%)',
+    headerTitleColor: '#ecfeff',
+    headerSubtitleColor: '#cffafe',
+    accentColor: '#22d3ee',
+    sidebarBgColor: '#0b1224',
+    sidebarBorderColor: '#111827',
+    sidebarTextColor: '#e2e8f0',
+    bodyFont: 'font-sans',
+    pillBgColor: '#0ea5e9',
+    pillTextColor: '#ecfeff',
+  },
+  technical: {
+    headerBgColor: '#0a0f1f',
+    headerGradient: 'linear-gradient(135deg, #0ea5e9 0%, #0a0f1f 100%)',
+    headerTitleColor: '#e2e8f0',
+    headerSubtitleColor: '#7dd3fc',
+    accentColor: '#7c3aed',
+    sidebarBgColor: '#0f172a',
+    sidebarBorderColor: '#1f2937',
+    sidebarTextColor: '#e2e8f0',
+    bodyFont: 'font-sans',
+    pillBgColor: '#1f2937',
+    pillTextColor: '#e0e7ff',
   },
 };
 
