@@ -64,6 +64,7 @@ const resumeSchema = {
       type: Type.ARRAY,
       items: { type: Type.STRING },
     },
+    htmlResume: { type: Type.STRING },
   },
   required: ["personalInfo", "summary", "experience", "education", "skills"],
 };
@@ -75,7 +76,7 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
 
   const systemInstruction = `
     You are an expert professional resume writer specializing in the Puerto Rico and US job markets.
-    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure.
+    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure, and when possible also produce a bespoke HTML résumé layout using TailwindCSS utility classes.
 
     CONTEXT:
     - Target audience: Recruiters in Puerto Rico and USA.
@@ -91,6 +92,7 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
     4.  **Skills**: Extract hard skills (software, tools) and soft skills relevant to the role.
     5.  **Education**: Format nicely (e.g., "Universidad de Puerto Rico" instead of "UPR").
     6.  **Tone**: Professional, confident, concise.
+    7.  **HTML Control**: Populate the field "htmlResume" with fully-rendered HTML that is mobile-safe, uses TailwindCSS utility classes, and avoids a templated look. Think like a designer: unique grid/columns, color accents, and typography pairings are encouraged. Do NOT include <html> or <body> tags—only the inner markup to be injected inside a container.
 
     INPUT HANDLING:
     - The input might be raw text, una lista de empleos o un PDF de LinkedIn.

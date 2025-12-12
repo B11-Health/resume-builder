@@ -30,6 +30,12 @@ export interface ResumeData {
   education: EducationItem[];
   skills: string[];
   languages: string[];
+  /**
+   * Optional HTML representation of the résumé when the AI wants full design control.
+   * The HTML should be Tailwind-first, self contained (no <html> or <head>), and fit inside
+   * the preview container.
+   */
+  htmlResume?: string;
 }
 
 export interface ResumeGenerationRequest {
@@ -50,5 +56,6 @@ export const INITIAL_RESUME_DATA: ResumeData = {
   experience: [],
   education: [],
   skills: ["Habilidad 1", "Habilidad 2"],
-  languages: ["Español (Nativo)", "Inglés (Fluido)"]
+  languages: ["Español (Nativo)", "Inglés (Fluido)"],
+  htmlResume: undefined,
 };
