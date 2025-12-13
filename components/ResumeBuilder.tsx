@@ -395,7 +395,7 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </nav>
 
-      <section className="max-w-7xl mx-auto w-full px-4 lg:px-8 pt-6 pb-2 no-print">
+      <!-- <section className="max-w-7xl mx-auto w-full px-4 lg:px-8 pt-6 pb-2 no-print">
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white shadow-2xl">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 p-6 md:p-10 items-center">
             <div className="space-y-3">
@@ -454,7 +454,7 @@ const ResumeBuilder: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> -->
 
       {/* Mobile Tabs */}
       <div className="lg:hidden bg-white border-b border-gray-200 sticky top-20 z-40 no-print shadow-sm">
@@ -672,13 +672,6 @@ const ResumeBuilder: React.FC = () => {
 
           <div className="w-full flex justify-center lg:sticky lg:top-28">
             <div className="w-full max-w-5xl bg-white border border-gray-200 rounded-2xl shadow-2xl shadow-gray-200/60 p-4 lg:p-6">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100 text-sm text-slate-600">
-                <div className="flex items-center gap-2 font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-                  Vista previa en vivo
-                </div>
-                <span className="px-2 py-1 rounded-full bg-slate-100 text-[11px] font-bold text-slate-700">Carta · 8.5x11</span>
-              </div>
               <div className="mt-4 overflow-hidden rounded-xl border border-gray-100 shadow-inner bg-gray-50">
                 <ResumePreview data={resumeData} template={selectedTemplate} themeOverrides={themeOverrides} />
               </div>
