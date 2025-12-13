@@ -237,18 +237,35 @@ const ResumeBuilder: React.FC = () => {
       return;
     }
 
-    previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    let exportClone: HTMLElement | null = null;
 
     try {
       await (document.fonts?.ready ?? Promise.resolve());
+
+      // Clone the preview so we can render it offscreen at full width without layout shifts
+      exportClone = previewElement.cloneNode(true) as HTMLElement;
+      exportClone.id = 'resume-preview-export';
+      exportClone.style.position = 'fixed';
+      exportClone.style.top = '-200vh';
+      exportClone.style.left = '50%';
+      exportClone.style.transform = 'translateX(-50%)';
+      exportClone.style.display = 'block';
+      exportClone.style.visibility = 'visible';
+      exportClone.style.opacity = '1';
+      exportClone.style.boxShadow = 'none';
+      exportClone.style.maxWidth = 'none';
+      exportClone.style.width = `${previewElement.scrollWidth}px`;
+      exportClone.style.height = 'auto';
+      document.body.appendChild(exportClone);
+
       await wait(100);
 
-      const canvas = await html2canvas(previewElement, {
+      const canvas = await html2canvas(exportClone, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        windowWidth: previewElement.scrollWidth,
-        windowHeight: previewElement.scrollHeight,
+        windowWidth: exportClone.scrollWidth,
+        windowHeight: exportClone.scrollHeight,
         scrollX: 0,
         scrollY: -window.scrollY,
       });
@@ -276,6 +293,10 @@ const ResumeBuilder: React.FC = () => {
     } catch (err) {
       console.error('Error generating PDF', err);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
+    } finally {
+      if (exportClone?.parentNode) {
+        exportClone.parentNode.removeChild(exportClone);
+      }
     }
   };
 
