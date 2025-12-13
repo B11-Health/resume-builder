@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { INITIAL_RESUME_DATA, ResumeData, ResumeGenerationRequest } from '../types';
 import { InputSection } from './InputSection';
 import { FONT_OPTIONS, FontFamilyId, ResumePreview, TemplateStyle, ThemeOverrides } from './ResumePreview';
@@ -190,20 +190,8 @@ const ResumeBuilder: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('modern');
   const [themeOverrides, setThemeOverrides] = useState<Required<ThemeOverrides>>(templateThemeDefaults.modern);
-
-  useEffect(() => {
-    const handleResize = () => {
-        setIsMobile(window.innerWidth < 1024);
-    };
-    // Set initial
-    handleResize();
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const handleGenerate = useCallback(async ({ text, jobDescription, jobLink }: ResumeGenerationRequest) => {
     setIsLoading(true);
@@ -239,18 +227,29 @@ const ResumeBuilder: React.FC = () => {
     setIsDownloading(true);
 
     const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const shouldRevealPreview = isMobile && !showPreviewMobile;
     const previousMobileState = showPreviewMobile;
 
-    if (shouldRevealPreview) {
-      setShowPreviewMobile(true);
-      await wait(450);
-    }
+    const revealPreviewIfHidden = async () => {
+      const preview = document.getElementById('resume-preview');
+      const hasSize = preview instanceof HTMLElement && preview.offsetHeight > 0 && preview.offsetWidth > 0;
+
+      if (!hasSize) {
+        setShowPreviewMobile(true);
+        await wait(500);
+      }
+
+      const refreshedPreview = document.getElementById('resume-preview');
+      if (!(refreshedPreview instanceof HTMLElement) || refreshedPreview.offsetHeight === 0 || refreshedPreview.offsetWidth === 0) {
+        return null;
+      }
+
+      return refreshedPreview;
+    };
+
+    const previewElement = await revealPreviewIfHidden();
 
     await (document.fonts?.ready ?? Promise.resolve());
     await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
-
-    const previewElement = document.getElementById('resume-preview');
 
     if (!(previewElement instanceof HTMLElement)) {
       alert('No se encontró la vista previa para generar el PDF.');
