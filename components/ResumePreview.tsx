@@ -127,7 +127,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   return (
     <div
       id="resume-preview"
-      className={`relative bg-white shadow-2xl w-[8.5in] min-h-[11in] mx-auto text-slate-800 ${fontClass} print:shadow-none overflow-hidden pb-12 print:pb-8`}
+      className={`relative bg-white shadow-2xl w-[8.5in] min-h-[11in] mx-auto text-slate-800 ${fontClass} print:shadow-none overflow-hidden`}
       style={{
         printColorAdjust: 'exact',
         WebkitPrintColorAdjust: 'exact',
@@ -233,9 +233,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
                     </div>
                     <ul className="space-y-2 text-slate-700 text-sm md:text-base">
                       {exp.description && exp.description.map((point, idx) => (
-                        <li key={idx} className="flex items-start gap-3 leading-relaxed">
-                          <span className="mt-1.5 h-2 w-2 rounded-full border border-slate-600 flex-shrink-0" aria-hidden="true"></span>
-                          <span className="flex-1">{point}</span>
+                        <li key={idx} className="flex items-center gap-3 leading-relaxed">
+                          <span className="h-2 w-2 rounded-full border border-slate-600 flex-shrink-0" aria-hidden="true"></span>
+                          <span className="flex-1 leading-relaxed">{point}</span>
                         </li>
                       ))}
                     </ul>
