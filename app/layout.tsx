@@ -48,12 +48,20 @@ export default function RootLayout({
               size: 8.5in 11in;
               margin: 0;
             }
+            html, body {
+              width: 100%;
+              min-height: 100%;
+              background: white;
+            }
             body {
               margin: 0;
               padding: 0;
               background: white;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+            }
+            body * {
+              visibility: hidden;
             }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -73,10 +81,15 @@ export default function RootLayout({
               min-height: 11in !important;
               margin: 0 auto !important;
               box-shadow: none !important;
-              position: relative;
-              top: auto;
-              left: auto;
+              position: absolute;
+              top: 0;
+              left: 0;
               padding-bottom: 0.5in;
+              visibility: visible !important;
+            }
+
+            #resume-preview * {
+              visibility: visible !important;
             }
           }
         `}} />
