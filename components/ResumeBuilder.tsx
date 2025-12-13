@@ -234,24 +234,33 @@ const ResumeBuilder: React.FC = () => {
 
       setTimeout(async () => {
         try {
-          const canvas = await html2canvas(previewElement as HTMLElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          const canvas = await html2canvas(previewElement as HTMLElement, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            windowWidth: previewElement.scrollWidth,
+            windowHeight: previewElement.scrollHeight,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+          });
           const imgData = canvas.toDataURL('image/png');
 
-          const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+          const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          const pageHeight = pdf.internal.pageSize.getHeight();
 
           let heightLeft = pdfHeight;
           let position = 0;
 
           pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-          heightLeft -= pdf.internal.pageSize.getHeight();
+          heightLeft -= pageHeight;
 
           while (heightLeft > 0) {
             position = heightLeft - pdfHeight;
             pdf.addPage();
             pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pdf.internal.pageSize.getHeight();
+            heightLeft -= pageHeight;
           }
 
           pdf.save(`${(new Date()).toISOString().slice(0,10)}-resume.pdf`);
