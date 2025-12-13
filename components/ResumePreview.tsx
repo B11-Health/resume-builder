@@ -111,7 +111,7 @@ interface ResumePreviewProps {
 }
 
 export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = 'modern', themeOverrides }) => {
-  const { personalInfo, summary, experience, education, skills, languages, htmlResume } = data;
+  const { personalInfo, summary, experience, education, skills, languages } = data;
   const templateStyles = TEMPLATE_STYLES[template] ?? TEMPLATE_STYLES.modern;
 
   const accentColor = themeOverrides?.accentColor || templateStyles.accentColor;
@@ -123,26 +123,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
   const headerBackgroundStyle = templateStyles.headerGradient && !themeOverrides?.headerBgColor
     ? { background: templateStyles.headerGradient }
     : { backgroundColor: headerBgColor };
-
-  const hasCustomHtml = Boolean(htmlResume?.trim());
-
-  if (hasCustomHtml) {
-    return (
-      <div
-        id="resume-preview"
-        className="bg-white shadow-2xl w-full max-w-[8.5in] min-h-[11in] mx-auto text-slate-800 print:shadow-none"
-        style={{
-          printColorAdjust: 'exact',
-          WebkitPrintColorAdjust: 'exact',
-        }}
-      >
-        <div
-          className="p-6 md:p-10"
-          dangerouslySetInnerHTML={{ __html: htmlResume || '' }}
-        />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -157,9 +137,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
     >
       {/* Header Section */}
       <div
-        className={`p-10 pb-8 print-color-adjust-exact border-b`}
+        className={`relative p-10 pb-8 print-color-adjust-exact border-b overflow-hidden`}
         style={headerBackgroundStyle}
       >
+        <div className="absolute inset-0 opacity-20 mix-blend-screen pointer-events-none" style={{ background: `radial-gradient(circle at 20% 20%, ${accentColor}55, transparent 40%), radial-gradient(circle at 80% 0%, #ffffff33, transparent 35%)` }} />
+        <div className="absolute top-6 right-6 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-white/30 text-white/90 backdrop-blur-sm bg-white/10">
+          <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
+          Diseño protegido
+        </div>
         <h1
           className="text-4xl md:text-5xl font-bold font-serif tracking-tight uppercase mb-2"
           style={{ color: templateStyles.headerTitleColor }}
@@ -284,9 +269,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
                 {skills.map((skill, index) => (
                   <span
                     key={index}
-                    className={`text-sm font-medium block w-full mb-1 px-2 py-1 rounded`}
-                    style={{ backgroundColor: templateStyles.pillBgColor, color: templateStyles.pillTextColor }}
+                    className={`inline-flex items-center gap-2 text-sm font-semibold px-3 py-2 rounded-full shadow-sm border`}
+                    style={{
+                      backgroundColor: templateStyles.pillBgColor,
+                      color: templateStyles.pillTextColor,
+                      borderColor: templateStyles.sidebarBorderColor,
+                    }}
                   >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
                     {skill}
                   </span>
                 ))}
@@ -320,9 +310,11 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
               </h2>
               <ul className="list-none space-y-2">
                 {languages.map((lang, index) => (
-                  <li key={index} className="text-sm flex items-center justify-between" style={{ color: sidebarTextColor }}>
-                    <span>{lang}</span>
-                    <span className={`h-1.5 w-1.5 rounded-full`} style={{ backgroundColor: accentColor }}></span>
+                  <li key={index} className="text-sm flex items-center justify-between gap-3" style={{ color: sidebarTextColor }}>
+                    <span className="font-medium">{lang}</span>
+                    <span className="flex-1 h-1 bg-white/40 rounded-full overflow-hidden">
+                      <span className="block h-full" style={{ width: '90%', backgroundColor: accentColor }} />
+                    </span>
                   </li>
                 ))}
               </ul>

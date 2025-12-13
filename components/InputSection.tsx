@@ -93,7 +93,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ onGenerate, isLoadin
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-slate-800 font-serif mb-2">1. Ingresa tus datos</h2>
         <p className="text-slate-600 text-sm leading-relaxed">
-          Sube tu currículum actual (Word/Txt) o copia y pega el texto. Nuestra IA organizará y mejorará el contenido profesionalmente.
+          Sube tu currículum actual (Word/Txt) o copia y pega el texto. Nuestra IA pule solo el contenido clave (resumen, logros y habilidades) y el diseño se mantiene con plantillas consistentes.
         </p>
       </div>
 

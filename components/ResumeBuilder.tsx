@@ -120,6 +120,28 @@ const themePresets: { id: string; name: string; accentColor: string; headerBgCol
   },
 ];
 
+const mergeResumeData = (incoming: ResumeData, current: ResumeData): ResumeData => {
+  const safeList = (items?: string[]) => items?.filter((item) => Boolean(item && item.trim().length > 0)) ?? [];
+
+  return {
+    ...current,
+    ...incoming,
+    personalInfo: {
+      ...current.personalInfo,
+      ...incoming.personalInfo,
+    },
+    summary: incoming.summary?.trim() || current.summary,
+    experience: incoming.experience?.map((exp) => ({
+      ...exp,
+      description: safeList(exp.description),
+    })) ?? current.experience,
+    education: incoming.education ?? current.education,
+    skills: safeList(incoming.skills) || current.skills,
+    languages: safeList(incoming.languages) || current.languages,
+    htmlResume: undefined,
+  };
+};
+
 const TeamList = () => {
   const teamMembers = [
     { id: 1, firstName: 'Cristian', lastName: 'Martínez', role: 'Fundador · Producto', focus: 'Experiencia de usuario' },
@@ -201,7 +223,7 @@ const ResumeBuilder: React.FC = () => {
       }
 
       const newData = await response.json();
-      setResumeData(newData);
+      setResumeData((prev) => mergeResumeData(newData, prev));
       if (window.innerWidth < 1024) {
         setShowPreviewMobile(true);
       }
