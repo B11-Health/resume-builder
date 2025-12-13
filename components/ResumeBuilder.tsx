@@ -264,26 +264,44 @@ const ResumeBuilder: React.FC = () => {
     previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await wait(350);
 
-    const awaitPrint = () =>
-      new Promise<void>((resolve) => {
-        const cleanup = () => {
-          window.removeEventListener('afterprint', handleAfterPrint);
-          resolve();
-        };
-
-        const handleAfterPrint = () => cleanup();
-
-        window.addEventListener('afterprint', handleAfterPrint, { once: true });
-        setTimeout(cleanup, 2000);
-      });
+    const html2canvasModule = await import('html2canvas');
+    const jsPDFModule = await import('jspdf');
 
     try {
-      const printPromise = awaitPrint();
-      window.print();
-      await printPromise;
+      const html2canvas = html2canvasModule.default;
+      const { jsPDF } = jsPDFModule;
+
+      const canvas = await html2canvas(previewElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: previewElement.scrollWidth,
+        windowHeight: previewElement.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'letter');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      while (heightLeft > 0) {
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+        if (heightLeft > 0) {
+          pdf.addPage();
+          position = heightLeft - imgHeight;
+        }
+      }
+
+      pdf.save('resume.pdf');
     } catch (error) {
-      console.error('Error al intentar imprimir/guardar en PDF', error);
-      alert('No se pudo iniciar la impresión. Intenta nuevamente o utiliza la opción de imprimir como PDF de tu navegador.');
+      console.error('Error al generar el PDF automáticamente', error);
+      alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
       if (!previousMobileState) {
         setShowPreviewMobile(previousMobileState);
