@@ -270,6 +270,8 @@ const ResumeBuilder: React.FC = () => {
       const html2canvas = html2canvasModule.default;
       const { jsPDF } = jsPDFModule;
 
+      const rect = previewElement.getBoundingClientRect();
+
       const canvas = await html2canvas(previewElement, {
         scale: 2,
         useCORS: true,
