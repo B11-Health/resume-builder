@@ -172,7 +172,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur shadow-sm"
               style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
             >
-              <svg className="w-4 h-4 self-center flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-4 h-4 flex-none block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
               </svg>
               <span className="leading-none">{personalInfo.email}</span>
@@ -183,7 +183,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur shadow-sm"
               style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
             >
-              <svg className="w-4 h-4 self-center flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-4 h-4 flex-none block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
               </svg>
               <span className="leading-none">{personalInfo.phone}</span>
@@ -194,7 +194,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur shadow-sm"
               style={{ color: headerTextColor, borderColor: headerContrastBorder, backgroundColor: 'rgba(255,255,255,0.06)' }}
             >
-              <svg className="w-4 h-4 self-center flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-4 h-4 flex-none block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
@@ -220,7 +220,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
           {summary && (
             <section className="rounded-2xl border border-slate-200/80 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-4 pb-3 flex items-center gap-2 border-b border-slate-100">
-                <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
+                <span className="bg-slate-900 w-2 h-2 rounded-full inline-block align-middle flex-none"></span>
                 Perfil Profesional
               </h2>
               <p className="text-slate-700 leading-relaxed text-justify">{summary}</p>
@@ -231,7 +231,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
           {experience && experience.length > 0 && (
             <section className="rounded-2xl border border-slate-200/80 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-widest mb-6 pb-3 flex items-center gap-2 border-b border-slate-100">
-                <span className="bg-slate-900 w-2 h-2 rounded-full"></span>
+                <span className="bg-slate-900 w-2 h-2 rounded-full inline-block align-middle flex-none"></span>
                 Experiencia Laboral
               </h2>
               <div className="space-y-6">
@@ -247,7 +247,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
                     <ul className="space-y-2 text-slate-700 text-sm md:text-base">
                       {exp.description && exp.description.map((point, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <span className="h-2 w-2 rounded-full border border-slate-600 flex-shrink-0 mt-1" aria-hidden="true"></span>
+                          <span className="mt-1 inline-flex h-2 w-2 flex-none items-center justify-center rounded-full border border-slate-600" aria-hidden="true"></span>
                           <span className="flex-1 text-slate-700 leading-relaxed">{point}</span>
                         </li>
                       ))}
