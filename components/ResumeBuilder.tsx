@@ -214,62 +214,69 @@ const ResumeBuilder: React.FC = () => {
   }, []);
 
   const handleDownloadPDF = async () => {
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const shouldRevealPreview = isMobile && !showPreviewMobile;
 
     if (shouldRevealPreview) {
       setShowPreviewMobile(true);
+      await wait(450);
     }
 
-    const waitForRender = shouldRevealPreview ? 450 : 150;
+    await wait(75);
 
-    setTimeout(async () => {
-      const previewElement = document.getElementById('resume-preview');
+    const previewElement = document.getElementById('resume-preview');
 
-      if (!previewElement) {
-        alert('No se encontró la vista previa para generar el PDF.');
-        return;
+    if (!(previewElement instanceof HTMLElement)) {
+      alert('No se encontró la vista previa para generar el PDF.');
+      return;
+    }
+
+    const rect = previewElement.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      alert('La vista previa no está lista para exportar. Intenta nuevamente.');
+      return;
+    }
+
+    previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+      await (document.fonts?.ready ?? Promise.resolve());
+      await wait(100);
+
+      const canvas = await html2canvas(previewElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: previewElement.scrollWidth,
+        windowHeight: previewElement.scrollHeight,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+      });
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
       }
 
-      previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      setTimeout(async () => {
-        try {
-          const canvas = await html2canvas(previewElement as HTMLElement, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            windowWidth: previewElement.scrollWidth,
-            windowHeight: previewElement.scrollHeight,
-            scrollX: 0,
-            scrollY: -window.scrollY,
-          });
-          const imgData = canvas.toDataURL('image/png');
-
-          const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-          const pageHeight = pdf.internal.pageSize.getHeight();
-
-          let heightLeft = pdfHeight;
-          let position = 0;
-
-          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-          heightLeft -= pageHeight;
-
-          while (heightLeft > 0) {
-            position = heightLeft - pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pageHeight;
-          }
-
-          pdf.save(`${(new Date()).toISOString().slice(0,10)}-resume.pdf`);
-        } catch (err) {
-          console.error('Error generating PDF', err);
-          alert('No se pudo generar el PDF. Intenta nuevamente.');
-        }
-      }, 150);
-    }, waitForRender);
+      pdf.save(`${new Date().toISOString().slice(0, 10)}-resume.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF', err);
+      alert('No se pudo generar el PDF. Intenta nuevamente.');
+    }
   };
 
   return (
