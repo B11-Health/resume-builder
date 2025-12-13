@@ -275,8 +275,15 @@ const ResumeBuilder: React.FC = () => {
       exportClone.style.visibility = 'visible';
       exportClone.style.opacity = '1';
       exportClone.style.boxShadow = 'none';
-      exportClone.style.maxWidth = 'none';
-      exportClone.style.width = `${previewElement.scrollWidth}px`;
+      exportClone.style.maxWidth = '8.5in';
+      exportClone.style.width = '8.5in';
+      exportClone.style.minHeight = '11in';
+      exportClone.style.borderRadius = '0';
+      exportClone.style.border = 'none';
+      exportClone.style.backgroundColor = '#ffffff';
+      exportClone.style.backgroundImage = 'none';
+      exportClone.style.padding = '0';
+      exportClone.style.margin = '0';
       exportClone.style.height = 'auto';
       document.body.appendChild(exportClone);
 
@@ -532,18 +539,20 @@ const ResumeBuilder: React.FC = () => {
         <div className={`flex-grow flex flex-col items-center ${!showPreviewMobile ? 'hidden lg:flex' : 'flex'}`}>
           {/* Mobile Print Button */}
           <div className="lg:hidden w-full mb-4 no-print">
-             <button 
+             <button
                onClick={handleDownloadPDF}
                 className="w-full flex justify-center items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 px-4 py-4 rounded-xl font-bold transition-colors shadow-lg"
-               >
+              >
                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                  Descargar PDF
                </button>
           </div>
-          
-          
 
-          <ResumePreview data={resumeData} template={selectedTemplate} themeOverrides={themeOverrides} />
+
+
+          <div className="w-full flex justify-center lg:sticky lg:top-28">
+            <ResumePreview data={resumeData} template={selectedTemplate} themeOverrides={themeOverrides} />
+          </div>
         </div>
 
       </main>

@@ -141,10 +141,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
         style={headerBackgroundStyle}
       >
         <div className="absolute inset-0 opacity-20 mix-blend-screen pointer-events-none" style={{ background: `radial-gradient(circle at 20% 20%, ${accentColor}55, transparent 40%), radial-gradient(circle at 80% 0%, #ffffff33, transparent 35%)` }} />
-        <div className="absolute top-6 right-6 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-white/30 text-white/90 backdrop-blur-sm bg-white/10">
-          <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
-          Diseño protegido
-        </div>
         <h1
           className="text-4xl md:text-5xl font-bold font-serif tracking-tight uppercase mb-2"
           style={{ color: templateStyles.headerTitleColor }}
