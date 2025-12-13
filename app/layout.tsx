@@ -1,4 +1,4 @@
-import React from 'react';
+ import React from 'react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -14,6 +14,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        // Código de Google Fonts para Montserrat
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
         {/* Tailwind CSS CDN */}
         <script src="https://cdn.tailwindcss.com"></script>
         
@@ -22,23 +24,23 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               tailwind.config = {
-                theme: {
-                  extend: {
-                    fontFamily: {
-                      sans: ['Lato', 'sans-serif'],
-                      serif: ['Playfair Display', 'serif'],
-                    },
-                    colors: {
-                      'pr-blue': '#00509d',
-                      'pr-dark-blue': '#00296b',
-                      'pr-red': '#ef233c',
-                      'slate-850': '#1e293b',
-                    }
-                  }
-                }
-              }
-            `,
-          }}
+              // layout.tsx (Modificación en tailwind.config)
+
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        // Fuentes originales del proyecto:
+        'sans-serif': ['Lato', 'sans-serif'], 
+        'serif': ['Playfair Display', 'serif'],
+
+        // ¡Añadir aquí la fuente PRO!
+        'pro-font': ['Montserrat', 'sans-serif'], 
+      },
+      // ... el resto de la configuración de colores (colors) sigue aquí ...
+    },
+  },
+
         />
         
         {/* Print Styles */}
