@@ -395,7 +395,7 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </nav>
 
-      <!-- <section className="max-w-7xl mx-auto w-full px-4 lg:px-8 pt-6 pb-2 no-print">
+      {/* <section className="max-w-7xl mx-auto w-full px-4 lg:px-8 pt-6 pb-2 no-print">
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white shadow-2xl">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 p-6 md:p-10 items-center">
             <div className="space-y-3">
@@ -454,7 +454,7 @@ const ResumeBuilder: React.FC = () => {
             </div>
           </div>
         </div>
-      </section> -->
+      </section> */}
 
       {/* Mobile Tabs */}
       <div className="lg:hidden bg-white border-b border-gray-200 sticky top-20 z-40 no-print shadow-sm">
