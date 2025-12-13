@@ -1,7 +1,7 @@
 'use server';
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { ResumeData, ResumeGenerationRequest } from "../types";
+import { INITIAL_RESUME_DATA, ResumeData, ResumeGenerationRequest } from "../types";
 
 // Initialize API Key securely on the server
 const GEMINI_API_KEY =
@@ -64,9 +64,43 @@ const resumeSchema = {
       type: Type.ARRAY,
       items: { type: Type.STRING },
     },
-    htmlResume: { type: Type.STRING },
   },
   required: ["personalInfo", "summary", "experience", "education", "skills"],
+};
+
+const sanitizeAiResume = (payload: ResumeData): ResumeData => {
+  const cleanList = (list?: (string | undefined | null)[]) =>
+    (list || []).map((item) => item?.trim()).filter((item): item is string => Boolean(item && item.length > 0));
+
+  const cleanExperience = payload.experience?.map((exp) => ({
+    company: exp.company?.trim() || "",
+    role: exp.role?.trim() || "",
+    startDate: exp.startDate?.trim() || "",
+    endDate: exp.endDate?.trim() || "",
+    description: cleanList(exp.description),
+  })) || [];
+
+  const cleanEducation = payload.education?.map((edu) => ({
+    institution: edu.institution?.trim() || "",
+    degree: edu.degree?.trim() || "",
+    startDate: edu.startDate?.trim() || "",
+    endDate: edu.endDate?.trim() || "",
+  })) || [];
+
+  return {
+    ...INITIAL_RESUME_DATA,
+    ...payload,
+    personalInfo: {
+      ...INITIAL_RESUME_DATA.personalInfo,
+      ...payload.personalInfo,
+    },
+    summary: payload.summary?.trim() || INITIAL_RESUME_DATA.summary,
+    experience: cleanExperience,
+    education: cleanEducation,
+    skills: cleanList(payload.skills) || INITIAL_RESUME_DATA.skills,
+    languages: cleanList(payload.languages) || INITIAL_RESUME_DATA.languages,
+    htmlResume: undefined,
+  };
 };
 
 export const generateResumeFromText = async ({ text, jobDescription, jobLink }: ResumeGenerationRequest): Promise<ResumeData> => {
@@ -92,7 +126,7 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
     4.  **Skills**: Extract hard skills (software, tools) and soft skills relevant to the role.
     5.  **Education**: Format nicely (e.g., "Universidad de Puerto Rico" instead of "UPR").
     6.  **Tone**: Professional, confident, concise.
-    7.  **HTML Control**: Populate the field "htmlResume" with fully-rendered HTML that is mobile-safe, uses TailwindCSS utility classes, and avoids a templated look. Think like a designer: unique grid/columns, color accents, and typography pairings are encouraged. Do NOT include <html> or <body> tags—only the inner markup to be injected inside a container.
+    7.  **HTML Control**: Do NOT populate the field "htmlResume". Keep that field undefined so the application can render the trusted, in-house templates consistently. Focus your creativity on the text for summary, bullet points, and skills.
 
     INPUT HANDLING:
     - The input might be raw text, una lista de empleos o un PDF de LinkedIn.
@@ -119,7 +153,8 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as ResumeData;
+      const parsed = JSON.parse(response.text) as ResumeData;
+      return sanitizeAiResume(parsed);
     } else {
       throw new Error("No content generated.");
     }
