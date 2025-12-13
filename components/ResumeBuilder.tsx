@@ -239,7 +239,6 @@ const ResumeBuilder: React.FC = () => {
     const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const shouldRevealPreview = isMobile && !showPreviewMobile;
     const previousMobileState = showPreviewMobile;
-    let printablePreview: HTMLElement | null = null;
 
     if (shouldRevealPreview) {
       setShowPreviewMobile(true);
@@ -257,40 +256,25 @@ const ResumeBuilder: React.FC = () => {
 
     try {
       await (document.fonts?.ready ?? Promise.resolve());
-      printablePreview = previewElement.cloneNode(true) as HTMLElement;
-      printablePreview.id = 'resume-preview-print';
-      printablePreview.style.position = 'absolute';
-      printablePreview.style.top = '0';
-      printablePreview.style.left = '-9999px';
-      printablePreview.style.width = '8.5in';
-      printablePreview.style.maxWidth = '8.5in';
-      printablePreview.style.minHeight = '11in';
-      printablePreview.style.borderRadius = '0';
-      printablePreview.style.border = 'none';
-      printablePreview.style.boxShadow = 'none';
-      printablePreview.style.backgroundImage = 'none';
-      printablePreview.style.transform = 'none';
-      document.body.appendChild(printablePreview);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
 
-      await wait(120);
-
-      const rect = printablePreview.getBoundingClientRect();
-      const previewHeight = Math.ceil(printablePreview.scrollHeight || rect.height);
+      const rect = previewElement.getBoundingClientRect();
+      const previewHeight = Math.ceil(previewElement.scrollHeight || rect.height);
       const previewWidth = Math.ceil(rect.width);
       if (!previewWidth || !previewHeight) {
         throw new Error('preview-not-ready');
       }
 
-      const canvas = await html2canvas(printablePreview, {
-        scale: 3,
+      const canvas = await html2canvas(previewElement, {
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         width: previewWidth,
         height: previewHeight,
         windowWidth: previewWidth,
         windowHeight: previewHeight,
-        scrollX: 0,
-        scrollY: 0,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
       });
       const imgData = canvas.toDataURL('image/png');
 
@@ -321,9 +305,6 @@ const ResumeBuilder: React.FC = () => {
         alert('No se pudo generar el PDF. Intenta nuevamente.');
       }
     } finally {
-      if (printablePreview?.parentNode) {
-        printablePreview.parentNode.removeChild(printablePreview);
-      }
       if (!previousMobileState) {
         setShowPreviewMobile(previousMobileState);
       }
