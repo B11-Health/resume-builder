@@ -261,6 +261,8 @@ const ResumeBuilder: React.FC = () => {
 
     let exportClone: HTMLElement | null = null;
 
+    let exportStyleTag: HTMLStyleElement | null = null;
+
     try {
       await (document.fonts?.ready ?? Promise.resolve());
 
@@ -287,16 +289,32 @@ const ResumeBuilder: React.FC = () => {
       exportClone.style.height = 'auto';
       document.body.appendChild(exportClone);
 
+      exportStyleTag = document.createElement('style');
+      exportStyleTag.id = 'resume-export-style-tag';
+      exportStyleTag.textContent = `
+        #resume-preview-export, #resume-preview-export * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        #resume-preview-export * {
+          transition: none !important;
+          animation: none !important;
+        }
+      `;
+      document.head.appendChild(exportStyleTag);
+
       await wait(100);
 
+      const cloneRect = exportClone.getBoundingClientRect();
       const canvas = await html2canvas(exportClone, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
-        windowWidth: exportClone.scrollWidth,
-        windowHeight: exportClone.scrollHeight,
+        windowWidth: Math.ceil(cloneRect.width),
+        windowHeight: Math.ceil(exportClone.scrollHeight),
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
+        foreignObjectRendering: true,
       });
       const imgData = canvas.toDataURL('image/png');
 
@@ -323,6 +341,9 @@ const ResumeBuilder: React.FC = () => {
       console.error('Error generating PDF', err);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
+      if (exportStyleTag?.parentNode) {
+        exportStyleTag.parentNode.removeChild(exportStyleTag);
+      }
       if (exportClone?.parentNode) {
         exportClone.parentNode.removeChild(exportClone);
       }
