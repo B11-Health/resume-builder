@@ -259,62 +259,31 @@ const ResumeBuilder: React.FC = () => {
       return;
     }
 
-    let exportClone: HTMLElement | null = null;
-
-    let exportStyleTag: HTMLStyleElement | null = null;
+    let originalInlineStyles: string | null = null;
 
     try {
       await (document.fonts?.ready ?? Promise.resolve());
+      originalInlineStyles = previewElement.getAttribute('style');
 
-      // Clone the preview so we can render it offscreen at full width without layout shifts
-      exportClone = previewElement.cloneNode(true) as HTMLElement;
-      exportClone.id = 'resume-preview-export';
-      exportClone.style.position = 'fixed';
-      exportClone.style.top = '-200vh';
-      exportClone.style.left = '50%';
-      exportClone.style.transform = 'translateX(-50%)';
-      exportClone.style.display = 'block';
-      exportClone.style.visibility = 'visible';
-      exportClone.style.opacity = '1';
-      exportClone.style.boxShadow = 'none';
-      exportClone.style.maxWidth = '8.5in';
-      exportClone.style.width = '8.5in';
-      exportClone.style.minHeight = '11in';
-      exportClone.style.borderRadius = '0';
-      exportClone.style.border = 'none';
-      exportClone.style.backgroundColor = '#ffffff';
-      exportClone.style.backgroundImage = 'none';
-      exportClone.style.padding = '0';
-      exportClone.style.margin = '0';
-      exportClone.style.height = 'auto';
-      document.body.appendChild(exportClone);
-
-      exportStyleTag = document.createElement('style');
-      exportStyleTag.id = 'resume-export-style-tag';
-      exportStyleTag.textContent = `
-        #resume-preview-export, #resume-preview-export * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        #resume-preview-export * {
-          transition: none !important;
-          animation: none !important;
-        }
-      `;
-      document.head.appendChild(exportStyleTag);
+      previewElement.style.width = '8.5in';
+      previewElement.style.maxWidth = '8.5in';
+      previewElement.style.minHeight = '11in';
+      previewElement.style.borderRadius = '0';
+      previewElement.style.border = 'none';
+      previewElement.style.boxShadow = 'none';
+      previewElement.style.backgroundImage = 'none';
 
       await wait(100);
 
-      const cloneRect = exportClone.getBoundingClientRect();
-      const canvas = await html2canvas(exportClone, {
+      const previewRect = previewElement.getBoundingClientRect();
+      const canvas = await html2canvas(previewElement, {
         scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
-        windowWidth: Math.ceil(cloneRect.width),
-        windowHeight: Math.ceil(exportClone.scrollHeight),
+        windowWidth: Math.ceil(previewRect.width),
+        windowHeight: Math.ceil(previewElement.scrollHeight),
         scrollX: 0,
         scrollY: 0,
-        foreignObjectRendering: true,
       });
       const imgData = canvas.toDataURL('image/png');
 
@@ -341,11 +310,10 @@ const ResumeBuilder: React.FC = () => {
       console.error('Error generating PDF', err);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
-      if (exportStyleTag?.parentNode) {
-        exportStyleTag.parentNode.removeChild(exportStyleTag);
-      }
-      if (exportClone?.parentNode) {
-        exportClone.parentNode.removeChild(exportClone);
+      if (originalInlineStyles) {
+        previewElement.setAttribute('style', originalInlineStyles);
+      } else {
+        previewElement.removeAttribute('style');
       }
     }
   };
