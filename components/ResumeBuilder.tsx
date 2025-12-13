@@ -298,10 +298,10 @@ const ResumeBuilder: React.FC = () => {
         windowHeight: Math.max(computedHeight, window.innerHeight),
       });
 
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'pt', 'letter');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 32;
 
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
@@ -310,18 +310,45 @@ const ResumeBuilder: React.FC = () => {
         throw new Error('No se pudo capturar la vista previa del CV.');
       }
 
-      const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-      const renderWidth = imgWidth * ratio;
-      const renderHeight = imgHeight * ratio;
-      const offsetX = (pageWidth - renderWidth) / 2;
-      const offsetY = (pageHeight - renderHeight) / 2;
+      const renderWidth = pageWidth - margin * 2;
+      const ratio = renderWidth / imgWidth;
+      const pageContentHeight = pageHeight - margin * 2;
 
-      const dimensions = [renderWidth, renderHeight, offsetX, offsetY];
-      if (dimensions.some((value) => !Number.isFinite(value))) {
+      if ([renderWidth, ratio, pageContentHeight].some((value) => !Number.isFinite(value))) {
         throw new Error('Dimensiones inválidas al generar el PDF.');
       }
 
-      pdf.addImage(imgData, 'PNG', offsetX, offsetY, renderWidth, renderHeight);
+      const pageSliceHeight = pageContentHeight / ratio;
+      let remainingHeight = imgHeight;
+      let positionY = 0;
+      let pageIndex = 0;
+
+      while (remainingHeight > 0) {
+        const sliceHeight = Math.min(pageSliceHeight, remainingHeight);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = imgWidth;
+        sliceCanvas.height = sliceHeight;
+
+        const ctx = sliceCanvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('No se pudo preparar el lienzo para el PDF.');
+        }
+
+        ctx.drawImage(canvas, 0, positionY, imgWidth, sliceHeight, 0, 0, imgWidth, sliceHeight);
+
+        const imgData = sliceCanvas.toDataURL('image/png');
+
+        if (pageIndex > 0) {
+          pdf.addPage();
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, margin, renderWidth, sliceHeight * ratio, undefined, 'FAST');
+
+        remainingHeight -= sliceHeight;
+        positionY += sliceHeight;
+        pageIndex += 1;
+      }
+
       pdf.save(`${resumeData.personalInfo.fullName || 'resume'}.pdf`);
     } catch (error) {
       console.error('Error generando el PDF', error);
