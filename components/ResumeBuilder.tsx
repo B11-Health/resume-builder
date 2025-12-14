@@ -303,14 +303,14 @@ const ResumeBuilder: React.FC = () => {
       printContainer.style.position = 'fixed';
       printContainer.style.inset = '0';
       printContainer.style.width = '816px';
-      printContainer.style.padding = '24px';
+      printContainer.style.padding = '0';
       printContainer.style.zIndex = '-1';
       printContainer.style.opacity = '0';
       printContainer.style.background = '#ffffff';
 
       const clonedPreview = previewElement.cloneNode(true) as HTMLElement;
-      clonedPreview.style.width = '100%';
-      clonedPreview.style.maxWidth = '768px';
+      clonedPreview.style.width = '816px';
+      clonedPreview.style.maxWidth = '816px';
       clonedPreview.style.minHeight = '1056px';
       clonedPreview.style.margin = '0 auto';
       clonedPreview.style.boxShadow = 'none';
@@ -320,8 +320,8 @@ const ResumeBuilder: React.FC = () => {
       document.body.appendChild(printContainer);
 
       await pdf.html(clonedPreview, {
-        margin: [24, 24, 24, 24],
-        width: 768,
+        margin: [18, 18, 18, 18],
+        width: 816,
         windowWidth: 816,
         html2canvas: {
           scale: 2,

@@ -207,9 +207,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
         </header>
 
         <div className="flex-1 px-[1.15in] py-[0.9in] space-y-8">
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-[0.42fr_0.58fr] gap-8 items-start">
             <aside
-              className="col-span-1 bg-white/80 rounded-2xl border border-slate-200 shadow-inner px-5 py-6 space-y-5"
+              className="bg-white/80 rounded-2xl border border-slate-200 shadow-inner px-6 py-7 space-y-5"
               style={avoidBreakStyle}
             >
               <SectionHeader label="Contacto" accent={accentColor} />
@@ -251,7 +251,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
               )}
             </aside>
 
-            <main className="col-span-2 space-y-6">
+            <main className="space-y-6">
               {experience?.length > 0 && (
                 <div className="space-y-4" style={avoidBreakStyle}>
                   <SectionHeader label="Experiencia" accent={accentColor} />
