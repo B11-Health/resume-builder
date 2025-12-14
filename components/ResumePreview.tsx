@@ -164,6 +164,28 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template = '
     ? { background: templateStyles.headerGradient }
     : { backgroundColor: headerBgColor };
 
+  const htmlResume = data.htmlResume?.trim();
+
+  if (htmlResume) {
+    return (
+      <div
+        id="resume-preview"
+        className={`relative bg-white shadow-2xl w-[8.5in] max-w-[8.5in] min-h-[11in] mx-auto text-slate-800 ${fontClass} print:shadow-none overflow-hidden`}
+        style={{
+          printColorAdjust: 'exact',
+          WebkitPrintColorAdjust: 'exact',
+          boxShadow: '0 25px 60px rgba(15,23,42,0.15)',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100 pointer-events-none" aria-hidden />
+        <div
+          className="relative h-full w-full"
+          dangerouslySetInnerHTML={{ __html: htmlResume }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       id="resume-preview"

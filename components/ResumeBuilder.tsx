@@ -167,7 +167,7 @@ const mergeResumeData = (incoming: ResumeData, current: ResumeData): ResumeData 
     education: incoming.education ?? current.education,
     skills: safeList(incoming.skills) || current.skills,
     languages: safeList(incoming.languages) || current.languages,
-    htmlResume: undefined,
+    htmlResume: incoming.htmlResume?.trim() || current.htmlResume,
   };
 };
 

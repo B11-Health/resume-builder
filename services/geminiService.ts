@@ -64,8 +64,19 @@ const resumeSchema = {
       type: Type.ARRAY,
       items: { type: Type.STRING },
     },
+    htmlResume: { type: Type.STRING },
   },
   required: ["personalInfo", "summary", "experience", "education", "skills"],
+};
+
+const sanitizeHtmlSnippet = (html?: string) => {
+  if (!html) return undefined;
+
+  const withoutScripts = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
+  const withoutEvents = withoutScripts.replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*')/gi, "");
+  const trimmed = withoutEvents.trim();
+
+  return trimmed.length > 0 ? trimmed : undefined;
 };
 
 const sanitizeAiResume = (payload: ResumeData): ResumeData => {
@@ -99,7 +110,7 @@ const sanitizeAiResume = (payload: ResumeData): ResumeData => {
     education: cleanEducation,
     skills: cleanList(payload.skills) || INITIAL_RESUME_DATA.skills,
     languages: cleanList(payload.languages) || INITIAL_RESUME_DATA.languages,
-    htmlResume: undefined,
+    htmlResume: sanitizeHtmlSnippet(payload.htmlResume),
   };
 };
 
@@ -110,23 +121,23 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
 
   const systemInstruction = `
     You are an expert professional resume writer specializing in the Puerto Rico and US job markets.
-    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure, and when possible also produce a bespoke HTML résumé layout using TailwindCSS utility classes.
+    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure **and** a polished HTML resume layout built with TailwindCSS utility classes that will fit neatly within an 8.5x11in preview container.
 
     CONTEXT:
     - Target audience: Recruiters in Puerto Rico and USA.
     - Standard Format: Chronological, clean, professional.
 
     INSTRUCTIONS:
-    1.  **Language**: Output primarily in Spanish (Neutral/Puerto Rico). If the input is heavily English, maintain English for proper nouns but format descriptions in Spanish unless the user seems to want an English resume. Default to Spanish.
-    2.  **Contact Info**: Extract phone (format: (XXX) XXX-XXXX), email, LinkedIn. If location is missing but context implies PR, suggest "Puerto Rico".
-    3.  **Experience**:
-        - Rewrite bullet points to start with strong action verbs (e.g., "Implementé", "Dirigí", "Aumenté").
-        - Quantify achievements where possible (e.g., "aumentó ventas un 20%").
-        - If dates are missing, use "Presente" or estimate based on context, or leave blank if unknown.
-    4.  **Skills**: Extract hard skills (software, tools) and soft skills relevant to the role.
-    5.  **Education**: Format nicely (e.g., "Universidad de Puerto Rico" instead of "UPR").
-    6.  **Tone**: Professional, confident, concise.
-    7.  **HTML Control**: Do NOT populate the field "htmlResume". Keep that field undefined so the application can render the trusted, in-house templates consistently. Focus your creativity on the text for summary, bullet points, and skills.
+    1. **Language**: Output primarily in Spanish (Neutral/Puerto Rico). If the input is heavily English, maintain English for proper nouns but format descriptions in Spanish unless the user seems to want an English resume. Default to Spanish.
+    2. **Contact Info**: Extract phone (format: (XXX) XXX-XXXX), email, LinkedIn. If location is missing but context implies PR, suggest "Puerto Rico".
+    3. **Experience**:
+       - Rewrite bullet points to start with strong action verbs (e.g., "Implementé", "Dirigí", "Aumenté").
+       - Quantify achievements where possible (e.g., "aumentó ventas un 20%").
+       - If dates are missing, use "Presente" or estimate based on context, or leave blank if unknown.
+    4. **Skills**: Extract hard skills (software, tools) and soft skills relevant to the role.
+    5. **Education**: Format nicely (e.g., "Universidad de Puerto Rico" instead of "UPR").
+    6. **Tone**: Professional, confident, concise.
+    7. **HTML Layout**: Always populate "htmlResume" with a single self-contained HTML/JSX snippet. Use Tailwind utility classes only (no <html> or <head> tags). Respect an 8.5x11in canvas by using wrappers like <div class="max-w-[8.5in] min-h-[11in] mx-auto p-10"> and balanced spacing to avoid overflow. Ensure headings, contact info, sections, and bullet points are neatly arranged and readable when printed.
 
     INPUT HANDLING:
     - The input might be raw text, una lista de empleos o un PDF de LinkedIn.
