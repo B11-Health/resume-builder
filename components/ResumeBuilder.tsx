@@ -261,10 +261,12 @@ const ResumeBuilder: React.FC = () => {
     const previousMobileState = showPreviewMobile;
 
     const revealPreviewIfHidden = async () => {
+      // Logic to ensure the preview exists on the DOM for capture
       const preview = document.getElementById('resume-preview');
       const hasSize = preview instanceof HTMLElement && preview.offsetHeight > 0 && preview.offsetWidth > 0;
 
       if (!hasSize) {
+        // Temporarily show preview on mobile if hidden to grab DOM
         setShowPreviewMobile(true);
         await wait(500);
       }
@@ -273,76 +275,97 @@ const ResumeBuilder: React.FC = () => {
       if (!(refreshedPreview instanceof HTMLElement) || refreshedPreview.offsetHeight === 0 || refreshedPreview.offsetWidth === 0) {
         return null;
       }
-
       return refreshedPreview;
     };
 
     const previewElement = await revealPreviewIfHidden();
 
+    // 1. Ensure fonts are loaded before capture
     await (document.fonts?.ready ?? Promise.resolve());
-    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    await wait(300);
 
     if (!(previewElement instanceof HTMLElement)) {
       alert('No se encontró la vista previa para generar el PDF.');
-      if (!previousMobileState) {
-        setShowPreviewMobile(previousMobileState);
-      }
+      if (!previousMobileState) setShowPreviewMobile(previousMobileState);
       setIsDownloading(false);
       return;
     }
 
+    // 2. Scroll to view (helps html2canvas sometimes)
     previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await wait(350);
 
     const html2canvasModule = await import('html2canvas');
     const jsPDFModule = await import('jspdf');
 
-    let clonedPreview: HTMLElement | null = null;
+    let cloneWrapper: HTMLElement | null = null;
 
     try {
       const html2canvas = html2canvasModule.default;
       const { jsPDF } = jsPDFModule;
 
-      clonedPreview = previewElement.cloneNode(true) as HTMLElement;
+      // 3. Create a wrapper to enforce desktop dimensions specifically
+      // This prevents the PDF from looking "squashed" if generated from a mobile device
+      cloneWrapper = document.createElement('div');
+      cloneWrapper.style.position = 'absolute';
+      cloneWrapper.style.top = '0';
+      cloneWrapper.style.left = '-99999px'; // Hide off-screen
+      cloneWrapper.style.zIndex = '-1000';
+      // 816px is exactly 8.5 inches at 96 DPI (standard screen DPI)
+      cloneWrapper.style.width = '816px'; 
+      document.body.appendChild(cloneWrapper);
+
+      const clonedPreview = previewElement.cloneNode(true) as HTMLElement;
+      
+      // 4. Force styles on the clone to ensure layout integrity
       clonedPreview.id = 'resume-preview-clone';
-      clonedPreview.style.position = 'absolute';
-      clonedPreview.style.left = '-99999px';
-      clonedPreview.style.top = '0';
+      clonedPreview.style.width = '100%'; // Will fill the 816px wrapper
+      clonedPreview.style.height = 'auto';
       clonedPreview.style.margin = '0';
-      clonedPreview.style.maxWidth = `${previewElement.scrollWidth}px`;
-      clonedPreview.style.width = `${previewElement.scrollWidth}px`;
-      clonedPreview.style.height = `${previewElement.scrollHeight}px`;
-      clonedPreview.style.minHeight = `${previewElement.scrollHeight}px`;
+      clonedPreview.style.overflow = 'visible';
       clonedPreview.style.boxShadow = 'none';
+      
+      cloneWrapper.appendChild(clonedPreview);
 
-      document.body.appendChild(clonedPreview);
+      // 5. SVG Alignment Fix
+      // We do NOT change display property here (it breaks flex layouts).
+      // We only nudge them vertically using relative positioning.
+      const icons = clonedPreview.querySelectorAll('svg');
+      icons.forEach((icon) => {
+        // Casting to unknown first to satisfy strict TypeScript check between SVGElement and HTMLElement
+        const el = icon as unknown as HTMLElement;
+        el.style.position = 'relative';
+        el.style.top = '1px'; // Slight nudge down for PDF rendering alignment
+      });
 
+      // 6. Generate Canvas
       const canvas = await html2canvas(clonedPreview, {
-        scale: 2,
+        scale: 2, // 2x scale for crisp text
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: clonedPreview.scrollWidth,
-        height: clonedPreview.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: clonedPreview.scrollWidth,
-        windowHeight: clonedPreview.scrollHeight,
+        width: 816, // Force width to 8.5 inches
+        // CRITICAL: Force a desktop viewport width so media queries (like Tailwind md/lg) render correctly
+        // even if the user is on a mobile phone.
+        windowWidth: 1400, 
       });
 
       if (canvas.width === 0 || canvas.height === 0) {
         throw new Error('La captura del PDF no produjo contenido.');
       }
 
+      // 7. Generate PDF
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'pt', 'letter');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      
       const imgWidth = pageWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       let heightLeft = imgHeight;
       let position = 0;
 
+      // Handle multi-page PDFs
       while (heightLeft > 0) {
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
@@ -357,7 +380,10 @@ const ResumeBuilder: React.FC = () => {
       console.error('Error al generar el PDF automáticamente', error);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
-      clonedPreview?.remove();
+      // Cleanup
+      if (cloneWrapper) {
+        document.body.removeChild(cloneWrapper);
+      }
 
       if (!previousMobileState) {
         setShowPreviewMobile(previousMobileState);
@@ -394,67 +420,6 @@ const ResumeBuilder: React.FC = () => {
           </div>
         </div>
       </nav>
-
-      {/* <section className="max-w-7xl mx-auto w-full px-4 lg:px-8 pt-6 pb-2 no-print">
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white shadow-2xl">
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 p-6 md:p-10 items-center">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/15 text-xs uppercase tracking-[0.3em] font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" aria-hidden />
-                Mejorado para Puerto Rico
-              </div>
-              <h1 className="text-3xl md:text-4xl font-black font-serif leading-tight">Construye un CV listo para compartir en minutos</h1>
-              <p className="text-blue-100 text-lg leading-relaxed max-w-3xl">
-                Visualiza cambios en vivo, aplica plantillas curadas y descarga en PDF carta optimizado para ATS sin perder tu voz.
-              </p>
-              <div className="flex flex-wrap gap-3 text-sm font-semibold text-white/90">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                  Descargas ilimitadas
-                </span>
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10v2m0 10v2" /></svg>
-                  Guardamos tus colores
-                </span>
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" /></svg>
-                  Ideal para entrevistas rápidas
-                </span>
-              </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 backdrop-blur-sm shadow-lg space-y-4">
-              <div className="flex items-center justify-between text-sm text-blue-50">
-                <span className="font-semibold">Lista de verificación</span>
-                <span className="px-2 py-1 rounded-full bg-emerald-400/20 border border-emerald-200/30 text-emerald-50 text-[11px] font-bold">+8 puntos ATS</span>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {quickSteps.map((step) => (
-                  <div key={step.title} className="rounded-lg bg-white/5 border border-white/10 p-4 flex flex-col gap-3 shadow-inner">
-                    <div className="flex items-center justify-between">
-                      {step.icon}
-                      <span className="w-2 h-2 rounded-full bg-white/40" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-white">{step.title}</p>
-                      <p className="text-xs text-blue-100 leading-relaxed">{step.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-3 text-xs text-blue-100">
-                <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping" aria-hidden />
-                  Guardamos los cambios en tu navegador
-                </span>
-                <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                  <span className="w-2 h-2 rounded-full bg-amber-300" aria-hidden />
-                  Revisa la vista previa antes de exportar
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> */}
 
       {/* Mobile Tabs */}
       <div className="lg:hidden bg-white border-b border-gray-200 sticky top-20 z-40 no-print shadow-sm">
@@ -611,212 +576,109 @@ const ResumeBuilder: React.FC = () => {
                         <span className="text-xs font-normal text-slate-500 mt-0.5">{font.description}</span>
                       </div>
                       {themeOverrides.bodyFont === font.id && (
-                        <svg className="w-5 h-5 text-pr-blue flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        <svg className="w-5 h-5 text-pr-blue flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
                       )}
                     </button>
                   ))}
-                 </div>
-              </div>
-
-              {/* Quick Themes Section */}
-              <div className="pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-pr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                      Combinaciones rápidas
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">Aplica una combinación curada en un click</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {themePresets.map((preset) => {
-                    const presetFont = FONT_OPTIONS.find((font) => font.id === preset.bodyFont);
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setThemeOverrides(preset)}
-                        className="flex items-center justify-between gap-3 p-4 rounded-lg border-2 border-slate-200 hover:border-pr-blue/60 hover:shadow-md transition-all bg-white hover:-translate-y-0.5"
-                      >
-                        <div className="flex flex-col text-left">
-                          <span className="text-sm font-bold text-slate-800">{preset.name}</span>
-                          <span className="text-xs text-slate-500 mt-1">
-                            {presetFont ? `${presetFont.label}` : 'Tipografía personalizada'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-7 h-7 rounded-full border-2 border-slate-300" style={{ backgroundColor: preset.headerBgColor }}></span>
-                          <span className="w-7 h-7 rounded-full border-2 border-slate-300" style={{ backgroundColor: preset.accentColor }}></span>
-                          <span className="w-7 h-7 rounded-full border-2 border-slate-300" style={{ backgroundColor: preset.headerTextColor }}></span>
-                        </div>
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
             </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 text-sm text-slate-700 shadow-sm">
-              <h3 className="font-bold mb-3 flex items-center gap-2 text-pr-blue">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Tips para el Mercado de PR
-              </h3>
-              <ul className="space-y-2">
-                <li className="flex gap-2">
-                  <span className="text-pr-blue font-bold">•</span>
-                  <span><strong>Formato USA:</strong> En PR usamos el formato estándar de EE.UU. (Letter, no A4).</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-pr-blue font-bold">•</span>
-                  <span><strong>Bilingüismo:</strong> Si dominas inglés y español, ponlo visible en "Idiomas".</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-pr-blue font-bold">•</span>
-                  <span><strong>Foto:</strong> Evita fotos a menos que sea para servicio al cliente o modelaje.</span>
-                </li>
-              </ul>
-           </div>
         </div>
 
         {/* Preview Side (Right) */}
-        <div
-          className={`print-preview-area flex-grow flex flex-col items-center ${!showPreviewMobile ? 'hidden lg:flex' : 'flex'}`}
-        >
-          {/* Mobile Print Button */}
-          <div className="lg:hidden w-full mb-4 no-print">
-             <button
-               onClick={handleDownloadPDF}
-               disabled={isDownloading}
-               className={`w-full flex justify-center items-center gap-2 px-4 py-4 rounded-xl font-bold transition-colors shadow-lg ${isDownloading ? 'bg-slate-400 cursor-not-allowed opacity-80' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+        <div className={`flex-grow lg:w-1/2 flex flex-col items-center justify-start ${!showPreviewMobile ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="sticky top-24 w-full max-w-[21.59cm] transition-all duration-300 ease-in-out px-4 lg:px-0 pb-10">
+            
+            {/* Mobile Download Button (Visible only when preview is active on mobile) */}
+            <div className="lg:hidden mb-6 w-full">
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className={`w-full flex justify-center items-center gap-2 px-5 py-3 rounded-xl text-white font-medium shadow-lg ${
+                  isDownloading ? 'bg-slate-400' : 'bg-slate-900 active:scale-95'
+                }`}
               >
-                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                 Descargar PDF
-               </button>
-          </div>
+                {isDownloading ? (
+                  <>Generando PDF...</>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar PDF
+                  </>
+                )}
+              </button>
+            </div>
 
+            {/* Preview Container */}
+            <div className="relative group">
+              {isDownloading && (
+                <div className="absolute inset-0 z-20 bg-white/90 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-sm text-slate-800">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-800 mb-3"></div>
+                  <p className="font-semibold animate-pulse">Preparando tu documento...</p>
+                </div>
+              )}
 
-
-          <div className="w-full flex justify-center lg:sticky lg:top-28">
-            <div className="w-full max-w-5xl bg-white border border-gray-200 rounded-2xl shadow-2xl shadow-gray-200/60 p-4 lg:p-6">
-              <div className="mt-4 overflow-hidden rounded-xl border border-gray-100 shadow-inner bg-gray-50">
-                <ResumePreview data={resumeData} template={selectedTemplate} themeOverrides={themeOverrides} />
+              {/* Resume Render - ID is crucial for html2canvas */}
+              <div 
+                id="resume-preview" 
+                className="bg-white shadow-2xl transition-shadow duration-300 min-h-[27.94cm] w-full"
+              >
+                <ResumePreview
+                  data={resumeData}
+                  template={selectedTemplate}
+                  themeOverrides={themeOverrides}
+                />
               </div>
             </div>
+            
+            <p className="text-center text-slate-400 text-xs mt-6 lg:mb-0 mb-10 no-print">
+              Vista previa en tiempo real. El PDF final tendrá calidad de impresión (300 DPI).
+            </p>
           </div>
         </div>
-
       </main>
 
-      {/* Donation & Credits Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white py-14 px-4 no-print mt-auto border-t-8 border-pr-blue">
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.15),transparent_45%)]" aria-hidden="true"></div>
-        <div className="relative max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-start">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs uppercase tracking-[0.3em] text-blue-100 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                Comunidad activa
+      {/* Footer / Team Section */}
+      <footer className="bg-slate-900 border-t border-slate-800 mt-auto no-print relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-3 gap-12 items-start">
+            <div className="lg:col-span-1">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                   <span className="text-white font-bold text-lg">R</span>
+                </div>
+                <span className="text-xl font-bold text-white tracking-tight">Resume Builder</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-serif font-black leading-tight text-white">Impulsa el talento tech de Puerto Rico</h2>
-              <p className="text-blue-100 text-lg leading-relaxed max-w-3xl">
-                Cada currículum generado aquí es gratis y abierto. Con tu aporte mantenemos los servidores, creamos nuevas plantillas y organizamos mentorías para que más boricuas consigan su próxima oportunidad laboral.
+              <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                Herramienta de código abierto diseñada para simplificar la creación de currículums ATS-friendly. 
+                Sin registros forzosos, sin marcas de agua y enfocado en la privacidad de tus datos.
               </p>
+              <div className="flex gap-4">
+                {/* Social placeholders */}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 cursor-pointer transition"></div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="lg:col-span-2">
               <TeamList />
             </div>
-
-            <div className="space-y-4">
-              <div className="bg-white/10 border border-white/10 rounded-2xl shadow-2xl p-6 backdrop-blur-lg">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.3em] text-blue-100 font-semibold">Apoya el proyecto</p>
-                    <h3 className="text-2xl font-bold text-white">Tu donación se convierte en becas y talleres</h3>
-                    <p className="text-sm text-blue-100 mt-2">Si este CV te acercó a tu próxima entrevista, considera compartir una taza de café ☕️</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-400/20 text-emerald-100 text-xs font-semibold px-3 py-1 border border-emerald-200/30">Transparente</span>
-                </div>
-
-                <div className="space-y-3">
-                  <a
-                    href="https://www.paypal.com/paypalme/codegym"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center justify-between gap-4 bg-[#003087] hover:bg-[#00256b] text-white px-5 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-2xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 group-hover:bg-white/20">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337l.756-4.728H9.77a5.626 5.626 0 002.266-.35c1.33-.497 2.21-1.385 2.585-2.712.17-.604.22-1.25.127-1.895-.444-2.813-2.682-3.88-5.753-3.88h-3.32a.965.965 0 00-.955.845l-2.43 15.228a.482.482 0 00.476.558h3.31l-.478 3.123a.625.625 0 00.617.72h2.515c.376 0 .67-.327.728-.698l.018-.11z"/></svg>
-                      </span>
-                      <div className="text-left">
-                        <p className="text-lg leading-tight">PayPal</p>
-                        <p className="text-xs font-normal text-blue-100">Contribuye con tarjeta o balance.</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full">paypal.me/codegym</span>
-                  </a>
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <button
-                      type="button"
-                      className="group flex-1 flex items-center justify-between gap-4 bg-white text-slate-900 px-4 py-4 rounded-xl font-semibold transition-all shadow-lg hover:-translate-y-0.5"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF8A50] to-[#FF5500] text-white">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                        </span>
-                        <div className="text-left">
-                          <p className="text-lg leading-tight">ATH Móvil</p>
-                          <p className="text-xs text-slate-600">Busca nuestro handle y envía al instante.</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-mono bg-slate-900 text-white px-3 py-1 rounded-full">/codegympr</span>
-                    </button>
-
-                    <a
-                      href="https://github.com/sponsors"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-between gap-4 bg-slate-800/70 hover:bg-slate-800 text-white px-4 py-4 rounded-xl font-semibold transition-all shadow-lg border border-white/10"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 3.99 4 6.5 4c1.54 0 3.04.99 3.57 2.36h.87C13.46 4.99 14.96 4 16.5 4 19.01 4 21 6 21 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                        </span>
-                        <div className="text-left">
-                          <p className="text-lg leading-tight">GitHub Sponsors</p>
-                          <p className="text-xs text-blue-100">Apoya el código abierto de Code Gym.</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold bg-white/10 px-3 py-1 rounded-full">Pronto</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-white">Prefieres apoyar de otra manera?</p>
-                  <p className="text-sm text-blue-100">Escríbenos para voluntariado, mentoría o colaboraciones con tu empresa.</p>
-                </div>
-                <a
-                  href="mailto:hola@codegympr.com"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-slate-900 font-semibold shadow-lg hover:-translate-y-0.5 transition"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-18 8h18a2 2 0 002-2V8a2 2 0 00-2-2H3a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
-                  hola@codegympr.com
-                </a>
-              </div>
+          </div>
+          
+          <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+            <p>&copy; {new Date().getFullYear()} Resume Builder Project. Open Source.</p>
+            <div className="flex gap-6">
+              <span className="hover:text-slate-300 cursor-pointer">Privacidad</span>
+              <span className="hover:text-slate-300 cursor-pointer">Términos</span>
+              <span className="hover:text-slate-300 cursor-pointer">GitHub</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Small Copyright Footer */}
-      <footer className="bg-slate-950 border-t border-slate-800 py-6 no-print">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} CodeGym, Inc. Todos los derechos reservados.<br/>
-          </p>
         </div>
       </footer>
     </div>
