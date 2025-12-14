@@ -272,71 +272,55 @@ const ResumeBuilder: React.FC = () => {
       return refreshedPreview;
     };
 
-    const previewElement = await revealPreviewIfHidden();
-
-    await (document.fonts?.ready ?? Promise.resolve());
-    await wait(200);
-
-    if (!(previewElement instanceof HTMLElement)) {
-      alert('No se encontró la vista previa para generar el PDF.');
-      if (!previousMobileState) setShowPreviewMobile(previousMobileState);
-      setIsDownloading(false);
-      return;
-    }
-
-    previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    await wait(250);
-
-    const jsPDFModule = await import('jspdf');
-
-    let printContainer: HTMLElement | null = null;
-
     try {
-      const { jsPDF } = jsPDFModule;
-      const pdf = new jsPDF('p', 'pt', 'letter');
+      const previewElement = await revealPreviewIfHidden();
 
-      printContainer = document.createElement('div');
-      printContainer.style.position = 'fixed';
-      printContainer.style.inset = '0';
-      printContainer.style.width = '816px';
-      printContainer.style.padding = '0';
-      printContainer.style.zIndex = '-1';
-      printContainer.style.opacity = '0';
-      printContainer.style.background = '#ffffff';
+      await (document.fonts?.ready ?? Promise.resolve());
+      await wait(150);
 
-      const clonedPreview = previewElement.cloneNode(true) as HTMLElement;
-      clonedPreview.style.width = '816px';
-      clonedPreview.style.maxWidth = '816px';
-      clonedPreview.style.minHeight = '1056px';
-      clonedPreview.style.margin = '0 auto';
-      clonedPreview.style.boxShadow = 'none';
-      clonedPreview.id = 'resume-preview-print';
+      if (!(previewElement instanceof HTMLElement)) {
+        throw new Error('Vista previa no disponible');
+      }
 
-      printContainer.appendChild(clonedPreview);
-      document.body.appendChild(printContainer);
+      previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await wait(200);
 
-      await pdf.html(clonedPreview, {
-        margin: [18, 18, 18, 18],
-        width: 816,
-        windowWidth: 816,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          width: 816,
-          windowWidth: 816,
+      const [{ jsPDF }, html2canvas] = await Promise.all([
+        import('jspdf'),
+        import('html2canvas').then((module) => module.default),
+      ]);
+
+      const canvas = await html2canvas(previewElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        onclone(cloneDocument) {
+          const cloned = cloneDocument.getElementById('resume-preview');
+          if (cloned instanceof HTMLElement) {
+            cloned.style.boxShadow = 'none';
+          }
         },
       });
 
+      const pdf = new jsPDF('p', 'pt', 'letter');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgData = canvas.toDataURL('image/png');
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = Math.min(pageWidth / canvasWidth, pageHeight / canvasHeight);
+      const printWidth = canvasWidth * ratio;
+      const printHeight = canvasHeight * ratio;
+      const offsetX = (pageWidth - printWidth) / 2;
+      const offsetY = (pageHeight - printHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', offsetX, offsetY, printWidth, printHeight, undefined, 'FAST');
       pdf.save('resume.pdf');
     } catch (error) {
       console.error('Error al generar el PDF automáticamente', error);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
-      if (printContainer) {
-        document.body.removeChild(printContainer);
-      }
-
       if (!previousMobileState) {
         setShowPreviewMobile(previousMobileState);
       }
