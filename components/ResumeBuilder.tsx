@@ -219,6 +219,8 @@ const ResumeBuilder: React.FC = () => {
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('modern');
   const [themeOverrides, setThemeOverrides] = useState<Required<ThemeOverrides>>(templateThemeDefaults.modern);
+  const [previewMode, setPreviewMode] = useState<'ai' | 'manual'>('manual');
+  const [manualOverride, setManualOverride] = useState(false);
 
   const handleGenerate = useCallback(async ({ text, jobDescription, jobLink }: ResumeGenerationRequest) => {
     setIsLoading(true);
@@ -238,6 +240,9 @@ const ResumeBuilder: React.FC = () => {
 
       const newData = await response.json();
       setResumeData((prev) => mergeResumeData(newData, prev));
+      const hasHtml = Boolean(newData.htmlResume?.trim());
+      setManualOverride((prev) => (hasHtml ? prev : false));
+      setPreviewMode(hasHtml && !manualOverride ? 'ai' : 'manual');
       if (window.innerWidth < 1024) {
         setShowPreviewMobile(true);
       }
@@ -328,6 +333,8 @@ const ResumeBuilder: React.FC = () => {
     }
   };
 
+  const previewData = previewMode === 'manual' ? { ...resumeData, htmlResume: undefined } : resumeData;
+  const isAiLayoutActive = previewMode === 'ai' && Boolean(resumeData.htmlResume?.trim());
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
@@ -382,7 +389,7 @@ const ResumeBuilder: React.FC = () => {
         <div className={`lg:w-[400px] xl:w-[450px] flex-shrink-0 flex flex-col gap-6 ${showPreviewMobile ? 'hidden lg:flex' : 'flex'} no-print`}>
            <InputSection onGenerate={handleGenerate} isLoading={isLoading} />
 
-           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
              <div className="flex items-start justify-between mb-4">
                <div>
                  <h2 className="text-2xl font-bold text-slate-800 font-serif mb-1">2. Elige tu estilo</h2>
@@ -390,15 +397,71 @@ const ResumeBuilder: React.FC = () => {
                </div>
                <span className="text-[10px] uppercase tracking-[0.15em] font-bold bg-pr-blue text-white px-3 py-1 rounded-full">Nuevo</span>
              </div>
+
+              {resumeData.htmlResume && (
+                <div className="mb-4 p-4 rounded-lg border border-indigo-100 bg-indigo-50/70 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-md text-pr-blue shadow-sm">
+                      <HiOutlineSparkles className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-slate-800">La IA envió un diseño completo.</p>
+                      <p className="text-sm text-slate-600">
+                        Puedes usarlo tal cual o volver al modo editable para aplicar plantillas y tipografías.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualOverride(false);
+                        setPreviewMode('ai');
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                        previewMode === 'ai'
+                          ? 'border-pr-blue bg-white text-pr-blue shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-pr-blue/50 text-slate-700'
+                      }`}
+                    >
+                      Usar diseño de la IA
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualOverride(true);
+                        setPreviewMode('manual');
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                        previewMode === 'manual'
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-emerald-200 text-slate-700'
+                      }`}
+                    >
+                      Aplicar plantillas editables
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {templates.map((template) => (
                   <button
                     key={template.id}
-                   onClick={() => {
-                     setSelectedTemplate(template.id);
-                     setThemeOverrides(templateThemeDefaults[template.id]);
-                   }}
-                    className={`text-left p-4 rounded-lg border transition-all duration-200 flex justify-between items-center gap-3 hover:-translate-y-[2px] ${selectedTemplate === template.id ? 'border-pr-blue bg-blue-50 shadow-md' : 'border-gray-200 bg-slate-50 hover:border-pr-blue/50'}`}
+                    onClick={() => {
+                      if (resumeData.htmlResume) {
+                        setManualOverride(true);
+                      }
+                      if (isAiLayoutActive) {
+                        setPreviewMode('manual');
+                      }
+                      setSelectedTemplate(template.id);
+                      setThemeOverrides(templateThemeDefaults[template.id]);
+                    }}
+                    className={`text-left p-4 rounded-lg border transition-all duration-200 flex justify-between items-center gap-3 hover:-translate-y-[2px] ${
+                      selectedTemplate === template.id
+                        ? 'border-pr-blue bg-blue-50 shadow-md'
+                        : 'border-gray-200 bg-slate-50 hover:border-pr-blue/50'
+                    } ${isAiLayoutActive ? 'opacity-80' : ''}`}
                   >
                     <div>
                       <p className="text-xs uppercase text-slate-500 font-semibold mb-1 flex items-center gap-2">
@@ -414,8 +477,8 @@ const ResumeBuilder: React.FC = () => {
                     </div>
                   </button>
                 ))}
+              </div>
             </div>
-          </div>
 
              <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
              <div className="flex items-start justify-between mb-4">
@@ -426,6 +489,9 @@ const ResumeBuilder: React.FC = () => {
                     prompt; aquí solo eliges la tipografía que refleje tu voz.
                   </p>
                </div>
+               {isAiLayoutActive && (
+                 <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">Activa “Aplicar plantillas editables” para modificar estas opciones</span>
+               )}
                <button
                  type="button"
                  onClick={() => setThemeOverrides(templateThemeDefaults[selectedTemplate])}
@@ -516,12 +582,12 @@ const ResumeBuilder: React.FC = () => {
               )}
 
               {/* Resume Render - ID is crucial for html2canvas */}
-              <div 
-                id="resume-preview" 
+              <div
+                id="resume-preview"
                 className="bg-white shadow-2xl transition-shadow duration-300 min-h-[27.94cm] w-full"
               >
                 <ResumePreview
-                  data={resumeData}
+                  data={previewData}
                   template={selectedTemplate}
                   themeOverrides={themeOverrides}
                 />
