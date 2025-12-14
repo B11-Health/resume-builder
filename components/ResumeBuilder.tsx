@@ -261,14 +261,12 @@ const ResumeBuilder: React.FC = () => {
     const previousMobileState = showPreviewMobile;
 
     const revealPreviewIfHidden = async () => {
-      // Logic to ensure the preview exists on the DOM for capture
       const preview = document.getElementById('resume-preview');
       const hasSize = preview instanceof HTMLElement && preview.offsetHeight > 0 && preview.offsetWidth > 0;
 
       if (!hasSize) {
-        // Temporarily show preview on mobile if hidden to grab DOM
         setShowPreviewMobile(true);
-        await wait(500);
+        await wait(400);
       }
 
       const refreshedPreview = document.getElementById('resume-preview');
@@ -280,9 +278,8 @@ const ResumeBuilder: React.FC = () => {
 
     const previewElement = await revealPreviewIfHidden();
 
-    // 1. Ensure fonts are loaded before capture
     await (document.fonts?.ready ?? Promise.resolve());
-    await wait(300);
+    await wait(200);
 
     if (!(previewElement instanceof HTMLElement)) {
       alert('No se encontró la vista previa para generar el PDF.');
@@ -291,98 +288,57 @@ const ResumeBuilder: React.FC = () => {
       return;
     }
 
-    // 2. Scroll to view (helps html2canvas sometimes)
     previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    await wait(350);
+    await wait(250);
 
-    const html2canvasModule = await import('html2canvas');
     const jsPDFModule = await import('jspdf');
 
-    let cloneWrapper: HTMLElement | null = null;
+    let printContainer: HTMLElement | null = null;
 
     try {
-      const html2canvas = html2canvasModule.default;
       const { jsPDF } = jsPDFModule;
+      const pdf = new jsPDF('p', 'pt', 'letter');
 
-      // 3. Create a wrapper to enforce desktop dimensions specifically
-      // This prevents the PDF from looking "squashed" if generated from a mobile device
-      cloneWrapper = document.createElement('div');
-      cloneWrapper.style.position = 'absolute';
-      cloneWrapper.style.top = '0';
-      cloneWrapper.style.left = '-99999px'; // Hide off-screen
-      cloneWrapper.style.zIndex = '-1000';
-      // 816px is exactly 8.5 inches at 96 DPI (standard screen DPI)
-      cloneWrapper.style.width = '816px'; 
-      document.body.appendChild(cloneWrapper);
+      printContainer = document.createElement('div');
+      printContainer.style.position = 'fixed';
+      printContainer.style.inset = '0';
+      printContainer.style.width = '816px';
+      printContainer.style.padding = '24px';
+      printContainer.style.zIndex = '-1';
+      printContainer.style.opacity = '0';
+      printContainer.style.background = '#ffffff';
 
       const clonedPreview = previewElement.cloneNode(true) as HTMLElement;
-      
-      // 4. Force styles on the clone to ensure layout integrity
-      clonedPreview.id = 'resume-preview-clone';
-      clonedPreview.style.width = '100%'; // Will fill the 816px wrapper
-      clonedPreview.style.height = 'auto';
-      clonedPreview.style.margin = '0';
-      clonedPreview.style.overflow = 'visible';
+      clonedPreview.style.width = '100%';
+      clonedPreview.style.maxWidth = '768px';
+      clonedPreview.style.minHeight = '1056px';
+      clonedPreview.style.margin = '0 auto';
       clonedPreview.style.boxShadow = 'none';
-      
-      cloneWrapper.appendChild(clonedPreview);
+      clonedPreview.id = 'resume-preview-print';
 
-      // 5. SVG Alignment Fix
-      // We do NOT change display property here (it breaks flex layouts).
-      // We only nudge them vertically using relative positioning.
-      const icons = clonedPreview.querySelectorAll('svg');
-      icons.forEach((icon) => {
-        // Casting to unknown first to satisfy strict TypeScript check between SVGElement and HTMLElement
-        const el = icon as unknown as HTMLElement;
-        el.style.position = 'relative';
-        el.style.top = '1px'; // Slight nudge down for PDF rendering alignment
+      printContainer.appendChild(clonedPreview);
+      document.body.appendChild(printContainer);
+
+      await pdf.html(clonedPreview, {
+        margin: [24, 24, 24, 24],
+        width: 768,
+        windowWidth: 816,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          width: 816,
+          windowWidth: 816,
+        },
       });
-
-      // 6. Generate Canvas
-      const canvas = await html2canvas(clonedPreview, {
-        scale: 2, // 2x scale for crisp text
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: 816, // Force width to 8.5 inches
-        // CRITICAL: Force a desktop viewport width so media queries (like Tailwind md/lg) render correctly
-        // even if the user is on a mobile phone.
-        windowWidth: 1400, 
-      });
-
-      if (canvas.width === 0 || canvas.height === 0) {
-        throw new Error('La captura del PDF no produjo contenido.');
-      }
-
-      // 7. Generate PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'pt', 'letter');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Handle multi-page PDFs
-      while (heightLeft > 0) {
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-        if (heightLeft > 0) {
-          position -= pageHeight;
-          pdf.addPage();
-        }
-      }
 
       pdf.save('resume.pdf');
     } catch (error) {
       console.error('Error al generar el PDF automáticamente', error);
       alert('No se pudo generar el PDF. Intenta nuevamente.');
     } finally {
-      // Cleanup
-      if (cloneWrapper) {
-        document.body.removeChild(cloneWrapper);
+      if (printContainer) {
+        document.body.removeChild(printContainer);
       }
 
       if (!previousMobileState) {
