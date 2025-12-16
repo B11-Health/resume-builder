@@ -163,6 +163,15 @@ const ResumeBuilder: React.FC = () => {
     setThemeOverrides(templateThemeDefaults[selectedTemplate]);
   }, [selectedTemplate]);
 
+  const handleCanvasDataChange = useCallback(
+    (next: ResumeData) => {
+      setResumeData(next);
+      setPreviewMode('manual');
+      setManualOverride(true);
+    },
+    []
+  );
+
   const previewData = previewMode === 'manual' ? { ...resumeData, htmlResume: undefined } : resumeData;
   const isAiLayoutActive = previewMode === 'ai' && Boolean(resumeData.htmlResume?.trim());
 
@@ -321,6 +330,7 @@ const ResumeBuilder: React.FC = () => {
                   data={previewData}
                   template={selectedTemplate}
                   themeOverrides={themeOverrides}
+                  onDataChange={handleCanvasDataChange}
                 />
               </div>
             </div>
