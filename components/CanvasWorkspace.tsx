@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Layer, Line, Rect, Stage, Text as KonvaText, Group, Transformer } from 'react-konva';
 import { ResumeData } from '../types';
 import { FONT_OPTIONS, TEMPLATE_STYLES } from './resume/constants';
 import { FontFamilyId, TemplateStyle, ThemeOverrides } from './resume/types';
@@ -347,7 +346,10 @@ const elementsToResumeData = (elements: CanvasElement[], current: ResumeData): R
         item.endDate = end;
       }
       if (el.binding.subField === 'description') {
-        item.description = el.text.split('\n').map((line) => line.trim()).filter(Boolean);
+        item.description = el.text
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean);
       }
     }
 
@@ -377,12 +379,35 @@ interface CanvasWorkspaceProps {
   onDataChange?: (data: ResumeData) => void;
 }
 
+type ResizeHandle = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+type DragState =
+  | {
+      mode: 'move';
+      id: string;
+      pointerStartX: number;
+      pointerStartY: number;
+      startX: number;
+      startY: number;
+    }
+  | {
+      mode: 'resize';
+      id: string;
+      handle: ResizeHandle;
+      pointerStartX: number;
+      pointerStartY: number;
+      startX: number;
+      startY: number;
+      startWidth: number;
+      startHeight: number;
+    };
+
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({ data, template = 'modern', themeOverrides, onDataChange }) => {
   const [elements, setElements] = useState<CanvasElement[]>(() => hydrateElementsFromResume(data, template, themeOverrides));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [guides, setGuides] = useState<{ vertical?: number; horizontal?: number }>({});
-  const stageRef = useRef<any>(null);
-  const transformerRef = useRef<Transformer>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const updateSource = useRef<'external' | 'internal'>('external');
 
   const theme = useMemo(() => TEMPLATE_STYLES[template] ?? TEMPLATE_STYLES.modern, [template]);
@@ -403,35 +428,104 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({ data, template
       updateSource.current = 'internal';
       onDataChange(next);
     }
-  }, [elements]);
+  }, [elements, data, onDataChange]);
 
-  useEffect(() => {
-    const transformer = transformerRef.current;
-    const stage = stageRef.current;
-    if (!transformer || !stage || !selectedId) return;
-    const selectedNode = stage.findOne(`#${selectedId}`);
-    if (selectedNode) {
-      transformer.nodes([selectedNode]);
-      transformer.getLayer()?.batchDraw();
+  const handlePointerMove = (event: PointerEvent) => {
+    if (!dragState) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const dx = event.clientX - dragState.pointerStartX;
+    const dy = event.clientY - dragState.pointerStartY;
+
+    if (dragState.mode === 'move') {
+      const nextX = snap(dragState.startX + dx);
+      const nextY = snap(dragState.startY + dy);
+      const nearCenterX = Math.abs(nextX - PAGE_WIDTH / 2) < GRID_SIZE;
+      const nearCenterY = Math.abs(nextY - PAGE_HEIGHT / 2) < GRID_SIZE;
+      setGuides({ vertical: nearCenterX ? PAGE_WIDTH / 2 : undefined, horizontal: nearCenterY ? PAGE_HEIGHT / 2 : undefined });
+      setElements((prev) => prev.map((el) => (el.id === dragState.id ? { ...el, x: nextX, y: nextY } : el)));
     }
-  }, [selectedId, elements]);
 
-  const handleDragMove = (id: string, pos: { x: number; y: number }) => {
-    const snapX = snap(pos.x);
-    const snapY = snap(pos.y);
-    const nearCenterX = Math.abs(snapX - PAGE_WIDTH / 2) < GRID_SIZE;
-    const nearCenterY = Math.abs(snapY - PAGE_HEIGHT / 2) < GRID_SIZE;
-    setGuides({
-      vertical: nearCenterX ? PAGE_WIDTH / 2 : undefined,
-      horizontal: nearCenterY ? PAGE_HEIGHT / 2 : undefined,
-    });
-    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, x: snapX, y: snapY } : el)));
+    if (dragState.mode === 'resize') {
+      setElements((prev) =>
+        prev.map((el) => {
+          if (el.id !== dragState.id) return el;
+          let newWidth = el.width;
+          let newHeight = el.height;
+          let newX = el.x;
+          let newY = el.y;
+
+          if (dragState.handle.includes('right')) {
+            newWidth = dragState.startWidth + dx;
+          }
+          if (dragState.handle.includes('left')) {
+            newWidth = dragState.startWidth - dx;
+            newX = dragState.startX + dx;
+          }
+          if (dragState.handle.includes('bottom')) {
+            newHeight = dragState.startHeight + dy;
+          }
+          if (dragState.handle.includes('top')) {
+            newHeight = dragState.startHeight - dy;
+            newY = dragState.startY + dy;
+          }
+
+          newWidth = snap(Math.max(60, newWidth));
+          newHeight = snap(Math.max(20, newHeight));
+          newX = snap(newX);
+          newY = snap(newY);
+
+          return { ...el, width: newWidth, height: newHeight, x: newX, y: newY };
+        })
+      );
+    }
   };
 
-  const handleTransform = (id: string, width: number, height: number, x: number, y: number) => {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, width: snap(width), height: snap(height), x: snap(x), y: snap(y) } : el))
-    );
+  useEffect(() => {
+    const move = (event: PointerEvent) => handlePointerMove(event);
+    const up = () => {
+      setDragState(null);
+      setGuides({});
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [dragState]);
+
+  const startDrag = (event: React.PointerEvent, id: string) => {
+    const element = elements.find((el) => el.id === id);
+    if (!element || !element.draggable) return;
+    event.stopPropagation();
+    setSelectedId(id);
+    setDragState({
+      mode: 'move',
+      id,
+      pointerStartX: event.clientX,
+      pointerStartY: event.clientY,
+      startX: element.x,
+      startY: element.y,
+    });
+  };
+
+  const startResize = (event: React.PointerEvent, id: string, handle: ResizeHandle) => {
+    const element = elements.find((el) => el.id === id);
+    if (!element) return;
+    event.stopPropagation();
+    setSelectedId(id);
+    setDragState({
+      mode: 'resize',
+      id,
+      handle,
+      pointerStartX: event.clientX,
+      pointerStartY: event.clientY,
+      startX: element.x,
+      startY: element.y,
+      startWidth: element.width,
+      startHeight: element.height,
+    });
   };
 
   const handleTextEdit = (id: string) => {
@@ -455,32 +549,17 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({ data, template
     );
   };
 
-  const gridLines = useMemo(() => {
-    const lines: JSX.Element[] = [];
-    for (let i = GRID_SIZE; i < PAGE_WIDTH; i += GRID_SIZE) {
-      lines.push(
-        <Line
-          key={`v-${i}`}
-          points={[i, 0, i, PAGE_HEIGHT]}
-          stroke="#f1f5f9"
-          strokeWidth={1}
-          listening={false}
-        />
-      );
-    }
-    for (let j = GRID_SIZE; j < PAGE_HEIGHT; j += GRID_SIZE) {
-      lines.push(
-        <Line
-          key={`h-${j}`}
-          points={[0, j, PAGE_WIDTH, j]}
-          stroke="#f8fafc"
-          strokeWidth={1}
-          listening={false}
-        />
-      );
-    }
-    return lines;
-  }, []);
+  const gridStyle: React.CSSProperties = useMemo(
+    () => ({
+      backgroundImage: `linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f8fafc 1px, transparent 1px)`,
+      backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+    }),
+    []
+  );
+
+  const handleDeselect = () => {
+    setSelectedId(null);
+  };
 
   return (
     <div className="relative" id="resume-canvas-workspace">
@@ -508,74 +587,110 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({ data, template
           Derecha
         </button>
       </div>
-      <Stage width={PAGE_WIDTH} height={PAGE_HEIGHT} ref={stageRef} className="bg-white shadow-2xl">
-        <Layer listening={false}>
-          <Rect x={0} y={0} width={PAGE_WIDTH} height={PAGE_HEIGHT} fill="#ffffff" cornerRadius={12} />
-          <Rect x={0} y={0} width={PAGE_WIDTH} height={150} fill={headerBg} opacity={0.95} />
-          <Rect x={32} y={140} width={PAGE_WIDTH * 0.38} height={PAGE_HEIGHT - 180} fill={theme.sidebarBgColor} opacity={0.92} />
-        </Layer>
-        <Layer listening={false}>{gridLines}</Layer>
-        <Layer>
-          {elements.map((el) => (
-            <Group
+
+      <div
+        ref={containerRef}
+        className="relative shadow-2xl select-none"
+        style={{ width: PAGE_WIDTH, height: PAGE_HEIGHT, backgroundColor: '#ffffff', borderRadius: 12, overflow: 'hidden', ...gridStyle }}
+        onPointerDown={handleDeselect}
+      >
+        <div className="absolute inset-0 pointer-events-none" style={{ background: headerBg, height: 150, opacity: 0.95 }} />
+        <div
+          className="absolute"
+          style={{
+            top: 140,
+            left: 32,
+            width: PAGE_WIDTH * 0.38,
+            height: PAGE_HEIGHT - 180,
+            background: theme.sidebarBgColor,
+            opacity: 0.92,
+            borderRadius: 6,
+          }}
+        />
+
+        {elements.map((el) => {
+          const isSelected = el.id === selectedId;
+          const paddingX = el.kind === 'chip' ? el.padding ?? 8 : 0;
+          const paddingY = el.kind === 'chip' ? el.padding ?? 6 : 0;
+
+          return (
+            <div
               key={el.id}
-              id={el.id}
-              x={el.x}
-              y={el.y}
-              draggable={el.draggable}
-              onDragMove={(evt) => handleDragMove(el.id, evt.target.position())}
-              onClick={() => setSelectedId(el.id)}
-              onTap={() => setSelectedId(el.id)}
-              onDblClick={() => handleTextEdit(el.id)}
-              onDblTap={() => handleTextEdit(el.id)}
+              role="presentation"
+              className={`absolute ${el.kind === 'chip' ? 'rounded-full border' : ''} ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
+              style={{
+                left: el.x,
+                top: el.y,
+                width: el.width,
+                height: el.height,
+                padding: `${paddingY}px ${paddingX}px`,
+                boxSizing: 'border-box',
+                borderColor: el.kind === 'chip' ? accentColor : 'transparent',
+                background: el.kind === 'chip' ? theme.pillBgColor : 'transparent',
+                color: el.fill,
+                fontSize: el.fontSize,
+                fontFamily: FONT_LOOKUP[el.fontFamily],
+                textAlign: el.align || 'left',
+                cursor: el.draggable ? 'move' : 'default',
+                whiteSpace: 'pre-line',
+              }}
+              onPointerDown={(evt) => startDrag(evt, el.id)}
+              onDoubleClick={() => handleTextEdit(el.id)}
+              onPointerUp={(evt) => evt.stopPropagation()}
             >
-              {el.kind === 'chip' && (
-                <Rect
-                  x={0}
-                  y={0}
-                  width={el.width}
-                  height={el.height}
-                  cornerRadius={14}
-                  fill={theme.pillBgColor}
-                  stroke={accentColor}
-                  strokeWidth={0.75}
-                  shadowColor="#000000"
-                  shadowOpacity={0.05}
-                  shadowBlur={4}
-                />
+              {el.text}
+              {isSelected && (
+                <>
+                  {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((handle) => {
+                    const size = 12;
+                    const offset = -6;
+                    const position: React.CSSProperties = {
+                      width: size,
+                      height: size,
+                      background: '#0ea5e9',
+                      position: 'absolute',
+                      borderRadius: 9999,
+                      border: '2px solid white',
+                    };
+
+                    if (handle.includes('top')) position.top = offset;
+                    if (handle.includes('bottom')) position.bottom = offset;
+                    if (handle.includes('left')) position.left = offset;
+                    if (handle.includes('right')) position.right = offset;
+
+                    return (
+                      <div
+                        key={handle}
+                        role="presentation"
+                        className="cursor-nwse-resize"
+                        style={position}
+                        onPointerDown={(evt) => startResize(evt, el.id, handle)}
+                      />
+                    );
+                  })}
+                </>
               )}
-              <KonvaText
-                x={el.kind === 'chip' ? (el.padding ?? 8) : 0}
-                y={el.kind === 'chip' ? (el.padding ?? 6) : 0}
-                width={el.width - (el.kind === 'chip' ? (el.padding ?? 8) * 2 : 0)}
-                height={el.height - (el.kind === 'chip' ? (el.padding ?? 6) * 2 : 0)}
-                text={el.text}
-                fontSize={el.fontSize}
-                fontFamily={FONT_LOOKUP[el.fontFamily]}
-                fill={el.fill}
-                align={el.align || 'left'}
-                listening={false}
-              />
-            </Group>
-          ))}
-          <Transformer
-            ref={transformerRef}
-            rotateEnabled={false}
-            enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-            boundBoxFunc={(oldBox, newBox) => {
-              const width = Math.max(60, newBox.width);
-              const height = Math.max(20, newBox.height);
-              handleTransform(selectedId || '', width, height, newBox.x, newBox.y);
-              return { ...newBox, width, height };
-            }}
+            </div>
+          );
+        })}
+
+        {guides.vertical !== undefined && (
+          <div
+            className="absolute top-0 h-full border-l border-dashed pointer-events-none"
+            style={{ left: guides.vertical, borderColor: accentColor }}
           />
-        </Layer>
-        <Layer listening={false}>
-          {guides.vertical && <Line points={[guides.vertical, 0, guides.vertical, PAGE_HEIGHT]} stroke={accentColor} dash={[4, 4]} />}
-          {guides.horizontal && <Line points={[0, guides.horizontal, PAGE_WIDTH, guides.horizontal]} stroke={accentColor} dash={[4, 4]} />}
-        </Layer>
-      </Stage>
-      <p className="text-xs text-slate-500 mt-2">Arrastra, suelta o haz doble clic para editar el contenido. El lienzo se ajusta a la cuadrícula para mantener la alineación.</p>
+        )}
+        {guides.horizontal !== undefined && (
+          <div
+            className="absolute left-0 w-full border-t border-dashed pointer-events-none"
+            style={{ top: guides.horizontal, borderColor: accentColor }}
+          />
+        )}
+      </div>
+
+      <p className="text-xs text-slate-500 mt-2">
+        Arrastra, suelta o haz doble clic para editar el contenido. El lienzo se ajusta a la cuadrícula para mantener la alineación.
+      </p>
     </div>
   );
 };
