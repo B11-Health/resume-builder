@@ -193,9 +193,9 @@ export const runLiveInterviewTurn = async (
             text: prompt,
           },
         ],
-        turnComplete: true,
       },
     ],
+    turnComplete: true,
   });
 
   const turnMessages = await handleTurn(responseQueue);
