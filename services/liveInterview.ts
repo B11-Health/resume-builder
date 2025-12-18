@@ -168,7 +168,7 @@ export const runLiveInterviewTurn = async (
       },
     },
     config: {
-      responseModalities: [Modality.AUDIO],
+      responseModalities: [Modality.AUDIO, Modality.TEXT],
       mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
       speechConfig: {
         voiceConfig: {
@@ -185,7 +185,17 @@ export const runLiveInterviewTurn = async (
   });
 
   session.sendClientContent({
-    turns: [prompt],
+    turns: [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: prompt,
+          },
+        ],
+      },
+    ],
+    turnComplete: true,
   });
 
   const turnMessages = await handleTurn(responseQueue);
