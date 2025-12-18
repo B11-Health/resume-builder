@@ -75,6 +75,46 @@ export const HiOutlineSparkles = (props: IconProps) => (
   </svg>
 );
 
+export const HiOutlineMicrophone = (props: IconProps) => (
+  <svg role="img" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 15a3 3 0 003-3V7a3 3 0 10-6 0v5a3 3 0 003 3z" />
+    <path d="M19 11v1a7 7 0 01-14 0v-1" />
+    <path d="M12 18v3" />
+    <path d="M9 21h6" />
+  </svg>
+);
+
+export const HiOutlineMicrophoneOff = (props: IconProps) => (
+  <svg role="img" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M9 5v6a3 3 0 003 3c.899 0 1.707-.394 2.25-1.02" />
+    <path d="M15 10.5V7a3 3 0 00-5.197-2.01" />
+    <path d="M19 11v1a7 7 0 01-9.25 6.651" />
+    <path d="M12 18v3" />
+    <path d="M9 21h6" />
+    <path d="M5 5l14 14" />
+  </svg>
+);
+
+export const HiOutlinePlayCircle = (props: IconProps) => (
+  <svg role="img" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx={12} cy={12} r={9} />
+    <path d="M10 8.5l5 3.5-5 3.5v-7z" />
+  </svg>
+);
+
+export const HiOutlineStopCircle = (props: IconProps) => (
+  <svg role="img" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx={12} cy={12} r={9} />
+    <rect x={9} y={9} width={6} height={6} rx={1} />
+  </svg>
+);
+
+export const HiOutlineVideoCamera = (props: IconProps) => (
+  <svg role="img" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M15 10.5V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2h7a2 2 0 002-2v-3.5l4 3v-9l-4 3z" />
+  </svg>
+);
+
 export const HiOutlineCheckCircle = (props: IconProps) => (
   <svg role="img" viewBox="0 0 20 20" fill="currentColor" stroke="none" {...props}>
     <path

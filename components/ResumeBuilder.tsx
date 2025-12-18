@@ -5,6 +5,7 @@ import { HiOutlineArrowDownTray, HiOutlineDocumentText } from 'react-icons/hi2';
 import { mergeResumeData } from '../services/resumeUtils';
 import { INITIAL_RESUME_DATA, ResumeData, ResumeGenerationRequest } from '../types';
 import { InputSection } from './InputSection';
+import InterviewMode from './InterviewMode';
 import TemplateSelector from './TemplateSelector';
 import TeamList from './TeamList';
 import ThemeCustomizer from './ThemeCustomizer';
@@ -218,6 +219,8 @@ const ResumeBuilder: React.FC = () => {
         {/* Editor Side (Left) */}
         <div className={`lg:w-[400px] xl:w-[450px] flex-shrink-0 flex flex-col gap-6 ${showPreviewMobile ? 'hidden lg:flex' : 'flex'} no-print`}>
           <InputSection onGenerate={handleGenerate} isLoading={isLoading} />
+
+          <InterviewMode />
 
           {resumeData.htmlResume && (
             <div className="bg-white p-6 rounded-xl shadow-md border border-indigo-100">
