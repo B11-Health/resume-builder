@@ -19,6 +19,7 @@ interface LiveInterviewResult {
 }
 
 const MODEL_ID = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
+const TURN_TIMEOUT_MS = 20_000;
 
 const convertToWav = (rawData: string[], mimeType: string) => {
   if (!rawData.length) return undefined;
@@ -151,63 +152,73 @@ export const runLiveInterviewTurn = async (
   const audioParts: string[] = [];
   const textParts: string[] = [];
 
-  const session: Session = await ai.live.connect({
-    model: MODEL_ID,
-    callbacks: {
-      onmessage: (message) => responseQueue.push(message),
-      onopen: () => {
-        // no-op placeholder for visibility
-      },
-      onerror: (e: ErrorEvent) => {
-        console.error('Live interview error:', e.message);
-      },
-      onclose: (event: CloseEvent) => {
-        if (event.reason) {
-          console.warn('Live interview closed:', event.reason);
-        }
-      },
-    },
-    config: {
-      responseModalities: [Modality.AUDIO, Modality.TEXT],
-      mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: 'Zephyr',
-          },
+  let session: Session | undefined;
+
+  try {
+    session = await ai.live.connect({
+      model: MODEL_ID,
+      callbacks: {
+        onmessage: (message) => responseQueue.push(message),
+        onopen: () => {
+          // no-op placeholder for visibility
+        },
+        onerror: (e: ErrorEvent) => {
+          console.error('Live interview error:', e.message);
+        },
+        onclose: (event: CloseEvent) => {
+          if (event.reason) {
+            console.warn('Live interview closed:', event.reason);
+          }
         },
       },
-      contextWindowCompression: {
-        triggerTokens: '25600',
-        slidingWindow: { targetTokens: '12800' },
-      },
-    },
-  });
-
-  session.sendClientContent({
-    turns: [
-      {
-        role: 'user',
-        parts: [
-          {
-            text: prompt,
+      config: {
+        responseModalities: [Modality.AUDIO, Modality.TEXT],
+        mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: 'Zephyr',
+            },
           },
-        ],
+        },
+        contextWindowCompression: {
+          triggerTokens: 25600,
+          slidingWindow: { targetTokens: 12800 },
+        },
       },
-    ],
-    turnComplete: true,
-  });
+    });
 
-  const turnMessages = await handleTurn(responseQueue);
-  const { mimeType } = summarizeModelTurn(turnMessages, audioParts, textParts);
+    session.sendClientContent({
+      turns: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      turnComplete: true,
+    });
 
-  session.close();
+    const turnMessages = await Promise.race([
+      handleTurn(responseQueue),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Live interview response timed out')), TURN_TIMEOUT_MS)
+      ),
+    ]);
 
-  const wavBuffer = mimeType ? convertToWav(audioParts, mimeType) : undefined;
+    const { mimeType } = summarizeModelTurn(turnMessages, audioParts, textParts);
 
-  return {
-    reply: textParts.join(' ').trim(),
-    audioBase64: wavBuffer?.toString('base64'),
-    mimeType: wavBuffer ? 'audio/wav' : undefined,
-  };
+    const wavBuffer = mimeType ? convertToWav(audioParts, mimeType) : undefined;
+
+    return {
+      reply: textParts.join(' ').trim(),
+      audioBase64: wavBuffer?.toString('base64'),
+      mimeType: wavBuffer ? 'audio/wav' : undefined,
+    };
+  } finally {
+    session?.close();
+  }
 };
