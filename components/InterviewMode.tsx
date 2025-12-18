@@ -178,6 +178,10 @@ const InterviewMode: React.FC = () => {
       mediaStreamRef.current = mediaStream;
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Ensure playback starts after attaching the MediaStream so the preview renders consistently
+        void videoRef.current.play()?.catch?.(() => {
+          // Silent catch to avoid blocking UX when autoplay is restricted
+        });
       }
       setIsActive(true);
       setError(null);
