@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { runLiveInterviewTurn } from '@/services/liveInterview';
 
 interface InterviewMessage {
   role: 'user' | 'ai';
@@ -38,46 +39,23 @@ export async function POST(request: Request) {
     }
 
     const historyContext = buildHistoryContext(history);
-    const basePrompt = `Actúa como un entrevistador técnico bilingüe (Español neutro) que realiza entrevistas simuladas en vivo. 
-Mantén un tono cálido y directo, ofrece seguimiento breve y una pregunta a la vez. 
+    const basePrompt = `Actúa como un entrevistador técnico bilingüe (Español neutro) que realiza entrevistas simuladas en vivo.
+
+Mantén un tono cálido y directo, ofrece seguimiento breve y una pregunta a la vez.
 Prioriza temas de experiencia laboral, proyectos y logro medibles. ${historyContext}\n\nÚltima entrada del candidato: ${prompt}`;
 
-    const textResponse = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: basePrompt }],
-        },
-      ],
-      config: {
-        temperature: 0.8,
-        maxOutputTokens: 250,
-      },
-    });
+    const liveResult = await runLiveInterviewTurn(ai, basePrompt);
 
-    const reply = textResponse.text?.trim();
-
-    if (!reply) {
+    if (!liveResult.reply && !liveResult.audioBase64) {
       return NextResponse.json({ error: 'No se pudo generar una respuesta.' }, { status: 500 });
     }
 
-    const ttsResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-pro-preview-tts',
-      contents: [{ parts: [{ text: reply }] }],
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
-          },
-        },
-      },
+    return NextResponse.json({
+      reply: liveResult.reply || 'Listo para continuar la entrevista.',
+      audioBase64: liveResult.audioBase64,
+      mimeType: liveResult.mimeType,
+      voice: 'Zephyr',
     });
-
-    const audioBase64 = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-
-    return NextResponse.json({ reply, audioBase64, voice: 'Kore' }, { status: 200 });
   } catch (error) {
     console.error('Interview mode error', error);
     return NextResponse.json(
