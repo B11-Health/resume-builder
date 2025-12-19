@@ -1,4 +1,4 @@
- import React from 'react';
+import React from 'react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -14,36 +14,36 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        // Código de Google Fonts para Montserrat
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+        {/* Código de Google Fonts para Montserrat (Ya incluido en el bloque de Fonts de abajo) */}
+        {/* <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" /> */}
+
         {/* Tailwind CSS CDN */}
         <script src="https://cdn.tailwindcss.com"></script>
         
-        {/* Tailwind Configuration */}
+        {/* Tailwind Configuration - CORREGIDO */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               tailwind.config = {
-              // layout.tsx (Modificación en tailwind.config)
-
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: {
-        // Fuentes originales del proyecto:
-        'sans-serif': ['Lato', 'sans-serif'], 
-        'serif': ['Playfair Display', 'serif'],
-
-        // ¡Añadir aquí la fuente PRO!
-        'pro-font': ['Montserrat', 'sans-serif'], 
-      },
-      // ... el resto de la configuración de colores (colors) sigue aquí ...
-    },
-  },
-
+                theme: {
+                  extend: {
+                    fontFamily: {
+                      // Fuentes originales del proyecto:
+                      'sans-serif': ['Lato', 'sans-serif'], 
+                      'serif': ['Playfair Display', 'serif'],
+                      // ¡Añadir aquí la fuente PRO!
+                      'pro-font': ['Montserrat', 'sans-serif'], 
+                    },
+                    // ... el resto de la configuración de colores (colors) sigue aquí ...
+                  },
+                },
+              } // <--- CIERRE CORRECTO DE tailwind.config
+            `,
+          }} 
         />
-        
-        {/* Print Styles */}
+        {/* FIN Tailwind Configuration */}
+
+        {/* Print Styles - ESTABA CORRECTO, PERO ASEGURAMOS LA POSICIÓN */}
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page {
@@ -83,7 +83,8 @@ tailwind.config = {
         {/* Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap&family=Montserrat:wght@400;700" rel="stylesheet" />
+        {/* Nota: Incluí Montserrat en el último enlace de Google Fonts para optimizar. */}
       </head>
       <body className="bg-gray-100 text-slate-800">
         {children}
