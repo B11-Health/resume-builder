@@ -47,8 +47,13 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page {
+              size: 8.5in 11in;
               margin: 0;
-              size: auto;
+            }
+            html, body {
+              width: 100%;
+              min-height: 100%;
+              background: white;
             }
             body {
               margin: 0;
@@ -60,22 +65,33 @@ export default function RootLayout({
             body * {
               visibility: hidden;
             }
-            #resume-preview, #resume-preview * {
-              visibility: visible;
-            }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
 
+            .print-preview-area {
+              display: block !important;
+              visibility: visible !important;
+            }
+            .print-preview-area * {
+              visibility: visible !important;
+            }
+
             #resume-preview {
-              width: 100% !important;
-              max-width: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
+              display: block !important;
+              width: 8.5in !important;
+              max-width: 8.5in !important;
+              min-height: 11in !important;
+              margin: 0 auto !important;
               box-shadow: none !important;
-              visibility: visible;
               position: absolute;
               top: 0;
               left: 0;
+              padding-bottom: 0.5in;
+              visibility: visible !important;
+            }
+
+            #resume-preview * {
+              visibility: visible !important;
             }
           }
         `}} />

@@ -1,7 +1,7 @@
 'use server';
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { ResumeData, ResumeGenerationRequest } from "../types";
+import { INITIAL_RESUME_DATA, ResumeData, ResumeGenerationRequest } from "../types";
 
 // Initialize API Key securely on the server
 const GEMINI_API_KEY =
@@ -68,6 +68,41 @@ const resumeSchema = {
   required: ["personalInfo", "summary", "experience", "education", "skills"],
 };
 
+const sanitizeAiResume = (payload: ResumeData): ResumeData => {
+  const cleanList = (list?: (string | undefined | null)[]) =>
+    (list || []).map((item) => item?.trim()).filter((item): item is string => Boolean(item && item.length > 0));
+
+  const cleanExperience = payload.experience?.map((exp) => ({
+    company: exp.company?.trim() || "",
+    role: exp.role?.trim() || "",
+    startDate: exp.startDate?.trim() || "",
+    endDate: exp.endDate?.trim() || "",
+    description: cleanList(exp.description),
+  })) || [];
+
+  const cleanEducation = payload.education?.map((edu) => ({
+    institution: edu.institution?.trim() || "",
+    degree: edu.degree?.trim() || "",
+    startDate: edu.startDate?.trim() || "",
+    endDate: edu.endDate?.trim() || "",
+  })) || [];
+
+  return {
+    ...INITIAL_RESUME_DATA,
+    ...payload,
+    personalInfo: {
+      ...INITIAL_RESUME_DATA.personalInfo,
+      ...payload.personalInfo,
+    },
+    summary: payload.summary?.trim() || INITIAL_RESUME_DATA.summary,
+    experience: cleanExperience,
+    education: cleanEducation,
+    skills: cleanList(payload.skills) || INITIAL_RESUME_DATA.skills,
+    languages: cleanList(payload.languages) || INITIAL_RESUME_DATA.languages,
+    htmlResume: undefined,
+  };
+};
+
 export const generateResumeFromText = async ({ text, jobDescription, jobLink }: ResumeGenerationRequest): Promise<ResumeData> => {
   if (!GEMINI_API_KEY) {
     throw new Error("API Key is missing. Check your environment configuration.");
@@ -75,7 +110,7 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
 
   const systemInstruction = `
     You are an expert professional resume writer specializing in the Puerto Rico and US job markets.
-    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure.
+    Your goal is to transform unstructured text into a high-quality, professional resume JSON structure, and when possible also produce a bespoke HTML résumé layout using TailwindCSS utility classes.
 
     CONTEXT:
     - Target audience: Recruiters in Puerto Rico and USA.
@@ -91,6 +126,7 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
     4.  **Skills**: Extract hard skills (software, tools) and soft skills relevant to the role.
     5.  **Education**: Format nicely (e.g., "Universidad de Puerto Rico" instead of "UPR").
     6.  **Tone**: Professional, confident, concise.
+    7.  **HTML Control**: Do NOT populate the field "htmlResume". Keep that field undefined so the application can render the trusted, in-house templates consistently. Focus your creativity on the text for summary, bullet points, and skills.
 
     INPUT HANDLING:
     - The input might be raw text, una lista de empleos o un PDF de LinkedIn.
@@ -117,7 +153,8 @@ export const generateResumeFromText = async ({ text, jobDescription, jobLink }: 
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as ResumeData;
+      const parsed = JSON.parse(response.text) as ResumeData;
+      return sanitizeAiResume(parsed);
     } else {
       throw new Error("No content generated.");
     }
